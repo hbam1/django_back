@@ -12,9 +12,12 @@ from django.conf import settings
 
 class RegisterAPIView(APIView):
     def post(self, request):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
+        serializer = UserSignUpSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            # password2 제거
+            serializer.validated_data.pop("password2")
+            # user 생성
+            user = User.objects.create_user(**serializer.validated_data)
 
             # jwt 토큰 접근
             token = TokenObtainPairSerializer.get_token(user)
@@ -22,7 +25,6 @@ class RegisterAPIView(APIView):
             access_token = str(token.access_token)
             res = Response(
                 {
-                    "user": serializer.data,
                     "message": "register successs",
                     "token": {
                         "access": access_token,

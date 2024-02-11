@@ -40,6 +40,7 @@ ALLOWED_HOSTS = []
 
 CUSTOM_APPS = [
     "users",
+    "goals",
 ]
 
 THIRD_PARTY_APPS = [
