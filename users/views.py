@@ -8,12 +8,18 @@ from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from django.shortcuts import render, get_object_or_404
 from django.conf import settings
+import random
+import string
 
 
+# 회원가입
 class RegisterAPIView(APIView):
     def post(self, request):
         serializer = UserSignUpSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
+            # 랜덤한 닉네임 생성
+            nickname = ''.join(random.choice(string.ascii_lowercase) for _ in range(8))
+            serializer.validated_data["nickname"] = nickname
             # password2 제거
             serializer.validated_data.pop("password2")
             # user 생성
@@ -83,14 +89,12 @@ class AuthAPIView(APIView):
         )
         # 이미 회원가입 된 유저일 때
         if user is not None:
-            serializer = UserSerializer(user)
             # jwt 토큰 접근
             token = TokenObtainPairSerializer.get_token(user)
             refresh_token = str(token)
             access_token = str(token.access_token)
             res = Response(
                 {
-                    "user": serializer.data,
                     "message": "login success",
                     "token": {
                         "access": access_token,
@@ -115,6 +119,26 @@ class AuthAPIView(APIView):
         response.delete_cookie("access")
         response.delete_cookie("refresh")
         return response
+
+    def patch(self, request):
+        # JWT에서 인증된 사용자 정보를 가져옵니다.
+        token = request.headers.get('Authorization').split(' ')[1]
+        decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        user_id = decoded_token.get('user_id')
+
+        # 해당 사용자 정보를 가져옵니다.
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response("사용자를 찾을 수 없습니다.", status=status.HTTP_404_NOT_FOUND)
+
+        # 전달된 데이터로 사용자 정보를 업데이트합니다.
+        serializer = UserSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            # 후에 리턴값은 변경
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # jwt 토근 인증 확인용 뷰셋
