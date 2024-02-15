@@ -1,5 +1,4 @@
 import jwt
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from .serializers import *
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
@@ -139,11 +138,3 @@ class AuthAPIView(APIView):
             # 후에 리턴값은 변경
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# jwt 토근 인증 확인용 뷰셋
-# Header - Authorization : Bearer <발급받은토큰>
-class UserViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
-    queryset = User.objects.all()
-    serializer_class = UserSerializer

@@ -28,6 +28,7 @@ class UserManager(BaseUserManager):
         superuser = self.create_user(
             email=email,
             password=password,
+            nickname=email, # superuser 만들 때 create_user를 부르기 때문에 nickname도 넘겨줘야됨
         )
 
         superuser.is_staff = True
@@ -46,6 +47,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     region = models.CharField(max_length=30, null=True, blank=True, help_text="사는 도시")
     region_detail = models.CharField(max_length=30, null=True, blank=True, help_text="상세 주소")
     fuel = models.PositiveIntegerField(null=True, blank=True, default=100, help_text="연료")
+    new = models.BooleanField(default=True, help_text="신규 회원")
 
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)

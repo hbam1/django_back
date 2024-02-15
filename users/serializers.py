@@ -15,6 +15,7 @@ class UserSignUpSerializer(serializers.Serializer):
             return serializers.ValidationError("이미 존재하는 이메일입니다.")
         return value
 
+    # 패스워드 확인
     def validate(self, data):
         password = data.get("password")
         password2 = data.get("password2")
@@ -31,4 +32,4 @@ class UserSerializer(serializers.ModelSerializer):
     fuel = serializers.IntegerField(read_only=True)
     class Meta:
         model = User
-        exclude = ("password",)
+        exclude = ("password", "is_superuser", "is_active", "is_staff",)
