@@ -1,5 +1,4 @@
 from urllib import request
-
 from rest_framework import viewsets, status
 from .serializers import *
 from goals.models import Goal
@@ -38,6 +37,7 @@ class GoalViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
+# 태그 조회
 class TagListAPI(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
@@ -46,9 +46,22 @@ class TagListAPI(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+# 활동 태그 조회
 class ActivityTagListAPI(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         activity_tags = ActivityTag.objects.all()
         serializer = ActivityTagSerializer(activity_tags, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# 방 생성 시 목표 조회
+class GoalListAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        # 로그인된 유저 정보
+        user = request.user
+        # user가 생성한 목표 리스트
+        goals = Goal.objects.filter(user=user).order_by('-title')
+        serializer = GoalListSerializer(goals, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

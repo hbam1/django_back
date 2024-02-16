@@ -41,6 +41,7 @@ ALLOWED_HOSTS = []
 CUSTOM_APPS = [
     "users",
     "goals",
+    "rooms",
 ]
 
 THIRD_PARTY_APPS = [

@@ -26,4 +26,4 @@ class Goal(models.Model):
     favor_offline = models.BooleanField(default=False, help_text="대면 희망 여부")
     is_in_group = models.BooleanField(default=False, help_text="그룹 소속 여부")
     is_completed = models.BooleanField(default=False, help_text="목표 완료 여부")
-    belonging_group_id = models.IntegerField(null=True, help_text="소속 그룹")
+    belonging_group_id = models.IntegerField(null=True, help_text="소속된 그룹")

@@ -31,3 +31,12 @@ class GoalSerializer(serializers.ModelSerializer):
         model = Goal
         exclude = ("is_in_group", "is_completed", "belonging_group_id", "user",) # user는 views에서 저장
 
+
+# 방 생성 시 목표 조회
+class GoalListSerializer(serializers.ModelSerializer):
+    tags = TagSerializer(many=True, read_only=True)
+    activity_tags = ActivityTagSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Goal
+        exclude = ("is_in_group", "is_completed", "belonging_group_id", "user", "content",)
