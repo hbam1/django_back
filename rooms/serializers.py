@@ -9,4 +9,4 @@ class RoomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Room
-        exclude = ["members", "master", "is_active"]
+        exclude = ["members", "master", "is_active", "closing_date", "penalty_bank",]

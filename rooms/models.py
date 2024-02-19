@@ -17,3 +17,7 @@ class Room(models.Model):
     penalty_value = models.PositiveIntegerField(default=0, help_text="벌금")
     favor_offline = models.BooleanField(default=False, help_text="대면활동 유무")
     is_active = models.BooleanField(default=False, help_text="활성화 여부")
+    deposit = models.PositiveIntegerField(default=0, help_text="보증금")
+    duration = models.DurationField(default=None, help_text="방 수명")
+    closing_date = models.DateTimeField(default=None, help_text="종료 시점")
+    penalty_bank = models.PositiveIntegerField(default=0, help_text="벌금의 합")
