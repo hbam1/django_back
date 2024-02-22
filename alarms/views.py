@@ -64,11 +64,15 @@ class AlarmAcceptAPI(APIView):
             if alarm.goal != request.data.get("goal"):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
             alarm.room.members.add(request.user)
+            alarm.goal.is_in_group = True
+            alarm.goal.belonging_group_id = request.data.get("room")
         else:
             # 알람의 방과 request의 방이 일치하는지 확인
             if alarm.room != request.data.get("room"):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
             alarm.room.members.add(alarm.from_to) # 수신자가 방장일 때
+            alarm.goal.is_in_group = True
+            alarm.goal.belonging_group_id = request.data.get("room")
 
         alarm.delete() # 알람 삭제
         return Response(status=status.HTTP_204_NO_CONTENT)
