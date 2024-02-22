@@ -48,6 +48,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     region_detail = models.CharField(max_length=30, null=True, blank=True, help_text="상세 주소")
     fuel = models.PositiveIntegerField(null=True, blank=True, default=100, help_text="연료")
     new = models.BooleanField(default=True, help_text="신규 회원")
+    coin = models.PositiveIntegerField(default=5000, help_text="재화")
 
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)

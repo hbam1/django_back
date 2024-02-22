@@ -2,6 +2,7 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from .models import Alarm
 from .serializers import AlarmSerializer, AlarmListSerializer
+from activities.models import UserActivityInfo
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -66,6 +67,17 @@ class AlarmAcceptAPI(APIView):
             alarm.room.members.add(request.user)
             alarm.goal.is_in_group = True
             alarm.goal.belonging_group_id = request.data.get("room")
+
+            # 보증금을 낼 수 있어야 가입
+            if request.user.coin < alarm.room.deposit:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+
+            # 유저 활동 정보 생성
+            user_activity_info = UserActivityInfo.objects.create(
+                user=request.user,
+                room=alarm.room,
+                deposit_left=alarm.room.deposit
+            )
         else:
             # 알람의 방과 request의 방이 일치하는지 확인
             if alarm.room != request.data.get("room"):
@@ -73,6 +85,17 @@ class AlarmAcceptAPI(APIView):
             alarm.room.members.add(alarm.from_to) # 수신자가 방장일 때
             alarm.goal.is_in_group = True
             alarm.goal.belonging_group_id = request.data.get("room")
+
+            # 보증금을 낼 수 있어야 가입
+            if alarm.alarm_from.coin <alarm.room.deposit:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+
+            # 유저 활동 정보 생성
+            user_activity_info = UserActivityInfo.objects.create(
+                user=alarm.alarm_from,
+                room=alarm.room,
+                deposit_left=alarm.room.deposit
+            )
 
         alarm.delete() # 알람 삭제
         return Response(status=status.HTTP_204_NO_CONTENT)

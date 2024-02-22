@@ -2,6 +2,7 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from goals.models import Tag, ActivityTag
 from rooms.models import Room
+from activities.models import UserActivityInfo
 from .serializers import RoomSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -35,5 +36,16 @@ class RoomCreateAPI(APIView):
             for activity_tag_name in activity_tag_names:
                 activity_tag = ActivityTag.objects.get(tag_name=activity_tag_name)
                 serializer.instance.activity_tags.add(activity_tag)
+
+            # 방장의 보증금 확인
+            if request.user.coin < room.deposit:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+
+            # 유저 활동 정보 생성
+            user_activity_info = UserActivityInfo.objects.create(
+                user=request.user,
+                room=room,
+                deposit_left=room.deposit
+            )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
