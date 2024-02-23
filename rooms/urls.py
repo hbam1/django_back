@@ -3,5 +3,5 @@ from . import views
 
 
 urlpatterns = [
-    path("create/", views.RoomCreateView.as_view()),
+    path("create/", views.RoomCreateAPI.as_view()),
 ]
