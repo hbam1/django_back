@@ -21,6 +21,13 @@ class ActivityTagSerializer(serializers.ModelSerializer):
         model = ActivityTag
         fields = ("tag_name",)
 
+# 임시로 사용하는 기본 목표 시리얼라이저(전체 포함)
+# 현재 사용 범위 : 추천 get view(관리를 위해 사용시 추가바람)
+class GoalDefaultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Goal
+        fields = '__all__'
+
 # 목표 생성 serializer
 class GoalSerializer(serializers.ModelSerializer):
     # tag들은 임의로 만들어서 넣지 못하게 views에서 처리

@@ -4,4 +4,5 @@ from . import views
 
 urlpatterns = [
     path("create/", views.RoomCreateAPI.as_view()),
+    path("recommend_member/<int:room_id>/", views.MemberRecommendationAPI.as_view()),
 ]
