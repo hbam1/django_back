@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework import viewsets, status
 from goals.models import Tag, ActivityTag
 from rooms.models import Room
@@ -11,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from .permissions import RoomAdminPermission
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.utils import timezone
 
 # Method import
 from elasticsearch_dsl import Search, Q
@@ -56,6 +56,7 @@ class RoomCreateAPI(APIView):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+# 유저 추천
 class MemberRecommendationAPI(APIView):
     # Custom Permission추가 / 기존의 room_admin_required 데코레이터 + get_object_or_404 기능을 대체함
     permission_classes = [IsAuthenticated, RoomAdminPermission]
@@ -125,4 +126,13 @@ class MemberRecommendationAPI(APIView):
         
         # 직렬화
         serializer = GoalDefaultSerializer(goals, many=True)
-        return Response(serializer.data, status=200)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+# 방 활성화
+class RoomActivateAPI(APIView):
+    permission_classes = [IsAuthenticated, RoomAdminPermission]
+    def post(self, request, pk):
+        room = Room.objects.get(pk=pk)
+        room.is_active = True
+        room.closing_date = timezone.now() + room.duration
+        return Response(status=status.HTTP_200_OK)

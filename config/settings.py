@@ -43,6 +43,7 @@ CUSTOM_APPS = [
     "goals",
     "rooms",
     "alarms",
+    "activities",
 ]
 
 THIRD_PARTY_APPS = [

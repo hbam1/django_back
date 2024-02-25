@@ -1,5 +1,3 @@
-# Class import
-
 from urllib import request
 from rest_framework import viewsets, status
 from .serializers import *
@@ -75,6 +73,7 @@ class GoalListAPI(APIView):
         serializer = GoalListSerializer(goals, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+# 그룹 추천
 class GroupRecommendationAPI(APIView):
     # Custom Permission추가 / 기존의 goal_ownership_required 데코레이터 + get_object_or_404 기능을 대체함
     permission_classes = [IsAuthenticated, GoalOwnershipPermission]
