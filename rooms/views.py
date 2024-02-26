@@ -11,6 +11,7 @@ from .permissions import RoomAdminPermission
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
+from django.db.models import Sum
 
 # Method import
 from elasticsearch_dsl import Search, Q
@@ -131,8 +132,49 @@ class MemberRecommendationAPI(APIView):
 # 방 활성화
 class RoomActivateAPI(APIView):
     permission_classes = [IsAuthenticated, RoomAdminPermission]
-    def post(self, request, pk):
-        room = Room.objects.get(pk=pk)
+    def post(self, request, room_id):
+        room = Room.objects.get(pk=room_id)
         room.is_active = True
         room.closing_date = timezone.now() + room.duration
         return Response(status=status.HTTP_200_OK)
+
+# 방 활동종료 및 삭제
+class RoomClosureAPI(APIView):
+    permission_classes = [IsAuthenticated, RoomAdminPermission]
+    def delete(self, request, room_id):
+        try:
+            room = Room.objects.get(pk=room_id)
+
+            # 징수한 벌금을 인증 성과에 따라 분배
+            if room.cert_required:
+                distribute_reward(room)
+
+            # 폐쇄에 따른 로직 => 모든 멤버의 Goal 정보 수정 및 초기화
+            members = room.members.all()
+            for member in members:
+                target_goal = member.goal.get(belonging_group_id=room_id)
+                target_goal.is_in_group = False
+                target_goal.belonging_group_id = None
+                target_goal.save()
+
+            room.delete()
+            # return data는 없고, front에서 status=204 응답을 받으면 컴포넌트 삭제
+            return Response(status=204)
+        except Exception:
+            return Response(status=400)
+
+# 보상금을 분배하는 로직
+def distribute_reward(room: Room):
+    activity_infos_in_room = room.activity_infos.all()
+    total_count = activity_infos_in_room.aggregate(total_count=Sum('authentication_count'))['total_count']
+    # 한 건의 인증도 이루어지지 않음 / ZeroDivision 예외 방지
+    if total_count == 0:
+        return
+    for activity_info in activity_infos_in_room:
+        user = activity_info.user
+        activity_count = activity_info.authentication_count
+        penalty_bank = room.penalty_bank
+        reward = (penalty_bank * activity_count) / total_count
+        user.coin += int(reward)
+        user.coin += activity_info.deposit_left
+        user.save()
