@@ -48,11 +48,18 @@ class GoalListSerializer(serializers.ModelSerializer):
         model = Goal
         exclude = ("is_in_group", "is_completed", "belonging_group_id", "user", "content",)
         
-        
+
+# 달성보고를 위한 골 serializer 
+class GoalForAchievementReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Goal
+        fields = ['user', 'content', 'is_completed']
+
 # 달성보고 serializer
 class AchievementReportSerializer(serializers.ModelSerializer):
-    goals = GoalDefaultSerializer(many=True, read_only=True)
+    goals = GoalForAchievementReportSerializer(many=True, read_only=True)
     
     class Meta:
         model = AchievementReport
         fields = '__all__'
+        read_only_fields = ('reacted_love', 'reacted_respectful', 'reacted_dislike')

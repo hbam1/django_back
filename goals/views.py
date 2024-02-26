@@ -170,7 +170,7 @@ class AchievementReportDetailAPI(APIView):
     
 # 달성보고 생성
 class AchievementReportCreateAPI(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, GoalOwnershipPermission]
 
     def post(self, request, goal_id, format=None):
         goal = Goal.objects.get(pk=goal_id)
