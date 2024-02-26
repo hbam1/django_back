@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from goals.models import Goal, Tag, ActivityTag
+from goals.models import Goal, Tag, ActivityTag, AchievementReport
 
 # 목표 태그 조회
 class TagSerializer(serializers.ModelSerializer):
@@ -47,3 +47,12 @@ class GoalListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Goal
         exclude = ("is_in_group", "is_completed", "belonging_group_id", "user", "content",)
+        
+        
+# 달성보고 serializer
+class AchievementReportSerializer(serializers.ModelSerializer):
+    goals = GoalDefaultSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = AchievementReport
+        fields = '__all__'
