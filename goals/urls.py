@@ -15,3 +15,9 @@ urlpatterns = [
     path('recommend_group/<int:goal_id>/', views.GroupRecommendationAPI.as_view()),
     path("", include(router.urls)),
 ]
+
+# "detail/<int:pk>/"
+# "viewset/"
+# "viewset/1/" get 요청
+# "viewset/1/" patch 요청
+# "viewset/" get 요청

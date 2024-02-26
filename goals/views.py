@@ -1,5 +1,3 @@
-# Class import
-
 from urllib import request
 from rest_framework import viewsets, status
 from .serializers import *
@@ -19,7 +17,13 @@ from elasticsearch_dsl import Search, Q
 class GoalViewSet(viewsets.ModelViewSet):
     queryset = Goal.objects.all()
     serializer_class = GoalSerializer
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action == 'delete':
+            permission_classes = [IsAuthenticated, GoalOwnershipPermission]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -44,6 +48,11 @@ class GoalViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # 현재 유저를 저장
         serializer.save(user=self.request.user)
+
+    def delete(self, request, goal_id):
+        goal = Goal.objects.get(pk=goal_id)
+        goal.delete()
+        return Response(status=204)
 
 
 # 태그 조회
@@ -75,6 +84,7 @@ class GoalListAPI(APIView):
         serializer = GoalListSerializer(goals, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+# 그룹 추천
 class GroupRecommendationAPI(APIView):
     # Custom Permission추가 / 기존의 goal_ownership_required 데코레이터 + get_object_or_404 기능을 대체함
     permission_classes = [IsAuthenticated, GoalOwnershipPermission]
