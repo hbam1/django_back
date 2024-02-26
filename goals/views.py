@@ -36,6 +36,7 @@ class GoalViewSet(viewsets.ModelViewSet):
             activity_tag = ActivityTag.objects.get(tag_name=activity_tag_name)
             serializer.instance.activity_tags.add(activity_tag)
 
+        self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
