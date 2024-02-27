@@ -20,3 +20,9 @@ class MemberAuthenticationSerializer(serializers.ModelSerializer):
         model = MemberAuthentication
         exclude = ("user",)
 
+
+#로그 출력 용
+class AuthLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MemberAuthentication
+        exclude = ("content", "image",)

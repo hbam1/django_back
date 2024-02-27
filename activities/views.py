@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets, status
 from .models import Authentication, MemberAuthentication
-from .serializers import AuthenticationSerializer, MemberAuthenticationSerializer
+from .serializers import AuthenticationSerializer, MemberAuthenticationSerializer, AuthLogSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -14,7 +14,7 @@ class MemberAuthCreateAPI(APIView):
     def post(self, request):
         serializer = MemberAuthenticationSerializer(data = request.data)
         serializer.is_valid(raise_exception=True)
-        auth = serializer.save(user=request.user)
+        serializer.save(user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
 
@@ -59,5 +59,5 @@ class LogListAPI(APIView):
     def get(self, request, pk):
         room = Room.objects.get(pk=pk)
         auth_logs = MemberAuthentication.objects.filter(room=room).filter(is_completed=True).order_by('-created_date')
-        serializer = MemberAuthenticationSerializer(auth_logs, many=True)
+        serializer = AuthLogSerializer(auth_logs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
