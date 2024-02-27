@@ -55,6 +55,8 @@ THIRD_PARTY_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework_simplejwt",
+    "django_celery_beat",
+    "django_celery_results",
 ]
 
 INSTALLED_APPS = CUSTOM_APPS + THIRD_PARTY_APPS
@@ -194,4 +196,7 @@ ELASTICSEARCH_DSL = {
     'default': {
         'hosts': 'http://localhost:9200',
     },
-} 
+}
+
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379'
