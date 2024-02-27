@@ -15,7 +15,7 @@ class MemberAuthCreateAPI(APIView):
         serializer = MemberAuthenticationSerializer(data = request.data)
         serializer.is_valid(raise_exception=True)
         auth = serializer.save(user=request.user)
-        return Response(MemberAuthenticationSerializer(auth), status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
 
 #인증 수락
@@ -55,8 +55,9 @@ class MemberAuthRejectAPI(APIView):
 class LogListAPI(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, room_id):
-        room = Room.objects.get(pk=room_id)
+    # pk = room_id
+    def get(self, request, pk):
+        room = Room.objects.get(pk=pk)
         auth_logs = MemberAuthentication.objects.filter(room=room).filter(is_completed=True).order_by('-created_date')
         serializer = MemberAuthenticationSerializer(auth_logs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
