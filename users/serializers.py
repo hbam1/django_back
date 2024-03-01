@@ -25,11 +25,8 @@ class UserSignUpSerializer(serializers.Serializer):
 
 
 # 회원정보조회
-class UserSerializer(serializers.ModelSerializer):
-    # 회원정보 수정 시 값을 변경할 수 없음.
-    # 나중에 비밀번호를 수정하는 serialzier는 따로 생성.
-    email = serializers.EmailField(read_only=True)
-    fuel = serializers.IntegerField(read_only=True)
-    class Meta:
-        model = User
-        exclude = ("password", "is_superuser", "is_active", "is_staff",)
+class UserInfoSerializer(serializers.Serializer):
+    nickname = serializers.CharField(source='user.nickname')
+    fuel = serializers.IntegerField(source='user.fuel')
+    completed_goals = serializers.IntegerField()
+    all_goals = serializers.IntegerField()

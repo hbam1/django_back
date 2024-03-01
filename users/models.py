@@ -1,6 +1,7 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
+from django.core.validators import MinValueValidator
 
 
 # 헬퍼 클래스
@@ -46,7 +47,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     profile_image = models.ImageField(upload_to='profile_images/%Y/%m/%d/', null=True, blank=True, help_text="프로필 이미지")
     region = models.CharField(max_length=30, null=True, blank=True, help_text="사는 도시")
     region_detail = models.CharField(max_length=30, null=True, blank=True, help_text="상세 주소")
-    fuel = models.PositiveIntegerField(null=True, blank=True, default=100, help_text="연료")
+    fuel = models.FloatField(null=True, blank=True, default=0, validators=[MinValueValidator(0)], help_text="연료")
     new = models.BooleanField(default=True, help_text="신규 회원")
     coin = models.PositiveIntegerField(default=5000, help_text="재화")
 
