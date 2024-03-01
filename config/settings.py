@@ -57,6 +57,7 @@ THIRD_PARTY_APPS = [
     "rest_framework_simplejwt",
     "django_celery_beat",
     "django_celery_results",
+    "corsheaders",
 ]
 
 INSTALLED_APPS = CUSTOM_APPS + THIRD_PARTY_APPS
@@ -69,7 +70,17 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
 ]
+
+# CORS 허용 여부 True 를 하게되면 누구든 접근이 허용된다.
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ALLOW_CREDENTIALS = True
+
+# 접근 가능한 url 을 따로 관리
+CORS_ORIGIN_WHITELIST = (
+    "http://localhost:5173",
+)
 
 ROOT_URLCONF = "config.urls"
 
