@@ -3,7 +3,7 @@ from rooms.models import Room
 from alarms.models import Alarm
 from goals.models import Goal
 from activities.models import UserActivityInfo
-from .serializers import RoomCreateSerializer
+from .serializers import RoomCreateSerializer, GoalListSerializer
 from goals.serializers import GoalDefaultSerializer
 from rest_framework.permissions import IsAuthenticated
 from .permissions import RoomAdminPermission
@@ -32,10 +32,9 @@ class GoalListAPI(APIView):
 class RoomCreateAPI(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
+        goal_id = request.data.pop('goal_id', None)
         serializer = RoomCreateSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            # client에서 보낸 goal_id를 통해 방장의 goal instance를 갖고 옴
-            goal_id = request.data.get("goal_id")
             try:
                 goal = Goal.objects.get(id=goal_id)
             except ObjectDoesNotExist:
@@ -63,7 +62,6 @@ class RoomCreateAPI(APIView):
                 room=room,
                 deposit_left=room.deposit
             )
-
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 # 유저 추천

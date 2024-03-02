@@ -12,8 +12,8 @@ class Room(models.Model):
     # 따라서 master의 goal list를 보내준 다음, 선택한 goal의 tag들을 값으로 넘겨줌
     tags = models.ManyToManyField(Tag, default=None, help_text="태그")
     activity_tags = models.ManyToManyField(ActivityTag, default=None, help_text="활동 태그")
-    cert_required = models.BooleanField(default=False, help_text="인증 필수 여부")
-    cert_detail = models.TextField(null=True, help_text="인증 상세")
+    cert_required = models.BooleanField(default=False, blank=True, help_text="인증 필수 여부")
+    cert_detail = models.TextField(null=True, blank=True, help_text="인증 상세")
     penalty_value = models.PositiveIntegerField(default=0, help_text="벌금")
     favor_offline = models.BooleanField(default=False, help_text="대면활동 유무")
     is_active = models.BooleanField(default=False, help_text="활성화 여부")
