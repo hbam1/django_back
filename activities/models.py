@@ -15,9 +15,9 @@ class UserActivityInfo(models.Model):
 class Authentication(models.Model):
     room = models.ForeignKey(Room, related_name='room', on_delete=models.CASCADE, help_text="방")
     user = models.ForeignKey(User, related_name='user', on_delete=models.CASCADE, help_text="유저")
-    start = models.DateTimeField(help_text="인증 시작")
-    end = models.DateTimeField(help_text="인증 종료")
-    participated = models.ManyToManyField(User, default=None, help_text="인증 참여자")
+    start = models.DateTimeField(help_text="시작 시각")
+    end = models.DateTimeField(help_text="종료 시각")
+    participated = models.ManyToManyField(User, default=None, help_text="참가 유저")
 
 
 #그룹에서 하는 인증 => 수락하는 시점에서 삭제

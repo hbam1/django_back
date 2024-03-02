@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from tasks import *
 
 urlpatterns = [
     path("create/", views.MemberAuthCreateAPI.as_view()),
