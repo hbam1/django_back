@@ -4,49 +4,57 @@ from rooms.models import Room
 from alarms.models import Alarm
 from goals.models import Goal
 from activities.models import UserActivityInfo
-from .serializers import RoomSerializer
-from goals.serializers import GoalDefaultSerializer
+from .serializers import RoomCreateSerializer
+from goals.serializers import GoalDefaultSerializer, GoalListSerializer
 from rest_framework.permissions import IsAuthenticated
 from .permissions import RoomAdminPermission
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
 from django.db.models import Sum
+from django.core.exceptions import ObjectDoesNotExist
 
 # Method import
 from elasticsearch_dsl import Search, Q
+
+# 방 생성 시 목표 조회
+class GoalListAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        # 로그인된 유저 정보
+        user = request.user
+        # user가 생성한 목표 리스트
+        goals = Goal.objects.filter(user=user, is_in_group=False, is_completed=False).order_by('-title')
+        serializer = GoalListSerializer(goals, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 # 방 생성
 class RoomCreateAPI(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
-        serializer = RoomSerializer(data=request.data)
+        serializer = RoomCreateSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            room = serializer.save(master=request.user)
-
-            # 태그 입력
+            # client에서 보낸 goal_id를 통해 방장의 goal instance를 갖고 옴
+            goal_id = request.data.get("goal_id")
             try:
-                tag_names = request.data.get("tags")  # str을 가진 list 반환
-            except tag_names.DoesNotExist():
+                goal = Goal.objects.get(id=goal_id)
+            except ObjectDoesNotExist:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-
-            for tag_name in tag_names:
-                tag = Tag.objects.get(tag_name=tag_name)
-                serializer.instance.tags.add(tag)
-
-            # 활동 태그 입력
-            try:
-                activity_tag_names = request.data.get("activity_tags")  # str을 가진 list 반환
-            except activity_tag_names.DoesNotExists():
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-
-            for activity_tag_name in activity_tag_names:
-                activity_tag = ActivityTag.objects.get(tag_name=activity_tag_name)
-                serializer.instance.activity_tags.add(activity_tag)
 
             # 방장의 보증금 확인
-            if request.user.coin < room.deposit:
+            if request.user.coin < request.data.get("deposit"):
                 return Response(status=status.HTTP_403_FORBIDDEN)
+
+            # goal로부터 태그들 갖고 옴
+            tags = goal.tags
+            activity_tags = goal.activity_tags
+
+            room = serializer.save(master=request.user)
+            # 방 객체를 저장한 후에 ManyToMany 필드에 연결된 모델의 인스턴스를 추가
+            room.tags.add(*tags)
+            room.activity_tags.add(*activity_tags)
+            room.members.add(request.user)
 
             # 유저 활동 정보 생성
             user_activity_info = UserActivityInfo.objects.create(

@@ -75,17 +75,6 @@ class ActivityTagListAPI(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# 방 생성 시 목표 조회
-class GoalListAPI(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-        # 로그인된 유저 정보
-        user = request.user
-        # user가 생성한 목표 리스트
-        goals = Goal.objects.filter(user=user).order_by('-title')
-        serializer = GoalListSerializer(goals, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
 # 그룹 추천
 class GroupRecommendationAPI(APIView):
     # Custom Permission추가 / 기존의 goal_ownership_required 데코레이터 + get_object_or_404 기능을 대체함
@@ -184,7 +173,7 @@ class AchievementReportDetailAPI(APIView):
 class AchievementReportCreateAPI(APIView):
     permission_classes = [IsAuthenticated, GoalOwnershipPermission]
 
-    def post(self, request, goal_id, format=None):
+    def post(self, request, goal_id):
         goal = Goal.objects.get(pk=goal_id)
         if goal.is_completed:
             return Response({'error': '이미 보고가 작성된 목표입니다.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -196,3 +185,13 @@ class AchievementReportCreateAPI(APIView):
             goal.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# 유저의 전체 목표 리스트
+class UserGoalListAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        user = request.user
+        goals = Goal.objects.filter(user=user).order_by('-id')
+        serializers = UserGoalListSerializer(goals, many=True)
+        return Response(serializers.data, status=status.HTTP_200_OK)

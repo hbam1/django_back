@@ -37,16 +37,6 @@ class GoalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Goal
         exclude = ("is_in_group", "is_completed", "belonging_group_id", "user",) # user는 views에서 저장
-
-
-# 방 생성 시 목표 조회
-class GoalListSerializer(serializers.ModelSerializer):
-    tags = TagSerializer(many=True, read_only=True)
-    activity_tags = ActivityTagSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Goal
-        exclude = ("is_in_group", "is_completed", "belonging_group_id", "user", "content",)
         
 
 # 달성보고를 위한 골 serializer 
@@ -63,3 +53,19 @@ class AchievementReportSerializer(serializers.ModelSerializer):
         model = AchievementReport
         fields = '__all__'
         read_only_fields = ('reacted_love', 'reacted_respectful', 'reacted_dislike')
+
+
+# 유저의 전체 목표 리스트
+class UserGoalListSerializer(serializers.ModelSerializer):
+    tags = TagSerializer(many=True, read_only=True)
+    activity_tags = ActivityTagSerializer(many=True, read_only=True)
+    class Meta:
+        model = Goal
+        fields = (
+            "title",
+            "is_in_group",
+            "content",
+            "tags",
+            "activity_tags",
+            "is_completed"
+        )

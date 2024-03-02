@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from goals.serializers import TagSerializer, ActivityTagSerializer
+from goals.models import Goal
 from .models import *
 
 # 임시로 사용하는 방 기본 시리얼라이저(전체 포함)
@@ -9,11 +10,28 @@ class RoomDefaultSerializer(serializers.ModelSerializer):
         model = Room
         fields = '__all__'
 
-# 방 생성
-class RoomSerializer(serializers.ModelSerializer):
-    tags = TagSerializer(many=True, read_only=True)
-    activity_tags = ActivityTagSerializer(many=True, read_only=True)
 
+# 방 생성 시 목표 조회
+class GoalListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Goal
+        fields = (
+            "id",
+            "title",
+        )
+
+
+# 방 생성
+class RoomCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
-        exclude = ["members", "master", "is_active", "closing_date", "penalty_bank",]
+        fields = (
+            "title",
+            "detail",
+            "duration",
+            "favor_offline",
+            "cert_required",
+            "cert_detail",
+            "penalty_value",
+            "deposit",
+        )
