@@ -54,6 +54,8 @@ class RoomCreateAPI(APIView):
             room.tags.add(*tags)
             room.activity_tags.add(*activity_tags)
             room.members.add(request.user)
+            goal.is_in_group = True
+            goal.belonging_group_id = room.id
 
             # 유저 활동 정보 생성
             user_activity_info = UserActivityInfo.objects.create(
