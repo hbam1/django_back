@@ -4,7 +4,7 @@ from alarms.models import Alarm
 from goals.models import Goal
 from activities.models import UserActivityInfo
 from .serializers import RoomCreateSerializer
-from goals.serializers import GoalDefaultSerializer, GoalListSerializer
+from goals.serializers import GoalDefaultSerializer
 from rest_framework.permissions import IsAuthenticated
 from .permissions import RoomAdminPermission
 from rest_framework.response import Response
