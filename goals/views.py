@@ -1,4 +1,3 @@
-from urllib import request
 from django.http import Http404
 from rest_framework import viewsets, status
 from .serializers import *
@@ -56,7 +55,6 @@ class GoalViewSet(viewsets.ModelViewSet):
         goal.delete()
         return Response(status=204)
 
-
 # 태그 조회
 class TagListAPI(APIView):
     permission_classes = [IsAuthenticated]
@@ -64,7 +62,6 @@ class TagListAPI(APIView):
         tags = Tag.objects.all().order_by('-tag_name')
         serializer = TagSerializer(tags, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 # 활동 태그 조회
 class ActivityTagListAPI(APIView):
@@ -83,7 +80,7 @@ class GroupRecommendationAPI(APIView):
     def get(self, request, goal_id):
         goal = Goal.objects.get(pk=goal_id)
         tag_ids = [tag.id for tag in goal.tags.all()]
-        activity_tag_ids = [tag.id for tag in goal.activityTags.all()]
+        activity_tag_ids = [tag.id for tag in goal.activity_tags.all()]
         alarms = Alarm.objects.filter(goal__pk=goal_id)
         is_pending = [alarm.room.pk for alarm in alarms]
 

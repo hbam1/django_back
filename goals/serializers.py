@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from goals.models import Goal, Tag, ActivityTag, AchievementReport
+from goals.models import Goal, Tag, ActivityTag, AchievementReport, User
 
 # 목표 태그 조회
 class TagSerializer(serializers.ModelSerializer):
@@ -39,16 +39,21 @@ class GoalSerializer(serializers.ModelSerializer):
         exclude = ("is_in_group", "is_completed", "belonging_group_id", "user",) # user는 views에서 저장
         
 
-# 달성보고를 위한 골 serializer 
-class GoalForAchievementReportSerializer(serializers.ModelSerializer):
+class UserForARSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'nickname']  # User 모델의 id와 nickname 필드를 전송
+
+class GoalForARSerializer(serializers.ModelSerializer):
+    user = UserForARSerializer()  
+
     class Meta:
         model = Goal
-        fields = ['user', 'content', 'is_completed']
+        fields = ['id', 'title', 'user']  # Goal 모델의 id, title, user 필드를 전송
 
-# 달성보고 serializer
 class AchievementReportSerializer(serializers.ModelSerializer):
-    goals = GoalForAchievementReportSerializer(many=True, read_only=True)
-    
+    goal = GoalForARSerializer(read_only=True)  # GoalForARSerializer를 사용하여 goal 필드를 직렬화
+
     class Meta:
         model = AchievementReport
         fields = '__all__'

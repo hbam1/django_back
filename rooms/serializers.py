@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from goals.serializers import TagSerializer, ActivityTagSerializer
 from goals.models import Goal
 from .models import *
 
