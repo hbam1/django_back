@@ -6,3 +6,4 @@ from .models import *
 admin.site.register(Goal)
 admin.site.register(Tag)
 admin.site.register(ActivityTag)
+admin.site.register(AchievementReport)
