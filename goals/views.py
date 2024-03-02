@@ -18,7 +18,13 @@ from elasticsearch_dsl import Search, Q
 class GoalViewSet(viewsets.ModelViewSet):
     queryset = Goal.objects.all()
     serializer_class = GoalSerializer
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action == 'delete':
+            permission_classes = [IsAuthenticated, GoalOwnershipPermission]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -37,12 +43,18 @@ class GoalViewSet(viewsets.ModelViewSet):
             activity_tag = ActivityTag.objects.get(tag_name=activity_tag_name)
             serializer.instance.activity_tags.add(activity_tag)
 
+        self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
         # 현재 유저를 저장
         serializer.save(user=self.request.user)
+
+    def delete(self, request, goal_id):
+        goal = Goal.objects.get(pk=goal_id)
+        goal.delete()
+        return Response(status=204)
 
 
 # 태그 조회
