@@ -19,5 +19,5 @@ class Room(models.Model):
     is_active = models.BooleanField(default=False, help_text="활성화 여부")
     deposit = models.PositiveIntegerField(default=0, help_text="보증금")
     duration = models.DurationField(default=None, help_text="방 수명")
-    closing_date = models.DateTimeField(default=None, help_text="종료 시점")
+    closing_date = models.DateTimeField(default=None, null=True, help_text="종료 시점")
     penalty_bank = models.PositiveIntegerField(default=0, help_text="벌금의 합")

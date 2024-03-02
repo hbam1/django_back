@@ -46,8 +46,8 @@ class RoomCreateAPI(APIView):
                 return Response(status=status.HTTP_403_FORBIDDEN)
 
             # goal로부터 태그들 갖고 옴
-            tags = goal.tags
-            activity_tags = goal.activity_tags
+            tags = goal.tags.all()
+            activity_tags = goal.activity_tags.all()
 
             room = serializer.save(master=request.user)
             # 방 객체를 저장한 후에 ManyToMany 필드에 연결된 모델의 인스턴스를 추가
