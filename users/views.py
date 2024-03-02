@@ -9,6 +9,8 @@ from django.shortcuts import render, get_object_or_404
 from django.conf import settings
 import random
 import string
+from goals.models import Goal
+from rest_framework.permissions import IsAuthenticated
 
 
 # 회원가입
@@ -48,37 +50,33 @@ class RegisterAPIView(APIView):
 
 
 class AuthAPIView(APIView):
+    # 인증 필수
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        return []
+
     # 유저 정보 확인
     def get(self, request):
-        try:
-            # access token을 decode 해서 유저 id 추출 => 유저 식별
-            access = request.COOKIES['access']
-            payload = jwt.decode(access, settings.SECRET_KEY, algorithms=['HS256'])
-            pk = payload.get('user_id')
-            user = get_object_or_404(User, pk=pk)
-            serializer = UserSerializer(instance=user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        user = request.user
+        goals = Goal.objects.filter(user=user)
+        # 목표의 수
+        all_goals = goals.count()
+        # 달성 목표
+        completed_goals = goals.filter(is_completed=True).count()
 
-        except(jwt.exceptions.ExpiredSignatureError):
-            # 토큰 만료 시 토큰 갱신
-            data = {'refresh': request.COOKIES.get('refresh', None)}
-            serializer = TokenRefreshSerializer(data=data)
-            if serializer.is_valid(raise_exception=True):
-                access = serializer.data.get('access', None)
-                refresh = serializer.data.get('refresh', None)
-                payload = jwt.decode(access, settings.SECRET_KEY, algorithms=['HS256'])
-                pk = payload.get('user_id')
-                user = get_object_or_404(User, pk=pk)
-                serializer = UserSerializer(instance=user)
-                res = Response(serializer.data, status=status.HTTP_200_OK)
-                res.set_cookie('access', access)
-                res.set_cookie('refresh', refresh)
-                return res
-            raise jwt.exceptions.InvalidTokenError
+        # 사용자 정보와 목표 수를 직렬화하여 데이터 생성
+        data = {
+            'nickname': user.nickname,
+            'fuel': user.fuel,
+            'all_goals': all_goals,
+            'completed_goals': completed_goals
+        }
 
-        except(jwt.exceptions.InvalidTokenError):
-            # 사용 불가능한 토큰일 때
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = UserInfoSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 로그인
     def post(self, request):
@@ -106,16 +104,6 @@ class AuthAPIView(APIView):
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    # 로그아웃
-    def delete(self, request):
-        # 쿠키에 저장된 토큰 삭제 => 로그아웃 처리
-        response = Response({
-            "message": "Logout success"
-            }, status=status.HTTP_202_ACCEPTED)
-        response.delete_cookie("access")
-        response.delete_cookie("refresh")
-        return response
-
     def patch(self, request):
         # JWT에서 인증된 사용자 정보를 가져옵니다.
         token = request.headers.get('Authorization').split(' ')[1]
@@ -129,7 +117,7 @@ class AuthAPIView(APIView):
             return Response("사용자를 찾을 수 없습니다.", status=status.HTTP_404_NOT_FOUND)
 
         # 전달된 데이터로 사용자 정보를 업데이트합니다.
-        serializer = UserSerializer(user, data=request.data)
+        serializer = UserInfoSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
             # 후에 리턴값은 변경
