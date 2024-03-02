@@ -18,7 +18,7 @@ class GoalDocument(Document):
         'tag_id': fields.Integer(),
     })
 
-    activityTags = fields.NestedField(properties={
+    activity_tags = fields.NestedField(properties={
         'tag_id': fields.Integer(),
     })
 
@@ -36,4 +36,4 @@ class GoalDocument(Document):
         return [{'tag_id': tag.pk} for tag in instance.tags.all()]
 
     def prepare_activityTags(self, instance):
-        return [{'tag_id': tag.pk} for tag in instance.activityTags.all()]
+        return [{'tag_id': tag.pk} for tag in instance.activity_tags.all()]

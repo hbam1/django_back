@@ -21,6 +21,7 @@ class RoomCreateAPI(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
         serializer = RoomSerializer(data=request.data)
+        print(serializer.initial_data)
         if serializer.is_valid(raise_exception=True):
             room = serializer.save(master=request.user)
 
@@ -65,7 +66,7 @@ class MemberRecommendationAPI(APIView):
     def get(self, request, room_id):
         room = Room.objects.get(pk=room_id)
         tag_ids = [tag.id for tag in room.tags.all()]
-        activity_tags_ids = [tag.id for tag in room.activityTags.all()]
+        activity_tags_ids = [tag.id for tag in room.activity_tags.all()]
         alarms = Alarm.objects.filter(room__pk=room_id).exclude(goal=None)
         is_pending = [alarm.goal.pk for alarm in alarms]
 

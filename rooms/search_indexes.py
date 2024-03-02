@@ -21,7 +21,7 @@ class RoomDocument(Document):
         'tag_id': fields.IntegerField(),
     })
 
-    activityTags = fields.NestedField(properties={
+    activity_tags = fields.NestedField(properties={
         'tag_id': fields.IntegerField(),
     })
 
@@ -41,4 +41,4 @@ class RoomDocument(Document):
         return [{'tag_id': tag.id} for tag in instance.tags.all()]
 
     def prepare_activityTags(self, instance):
-        return [{'tag_id': tag.id} for tag in instance.activityTags.all()]
+        return [{'tag_id': tag.id} for tag in instance.activity_tags.all()]
