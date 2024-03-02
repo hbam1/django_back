@@ -1,8 +1,9 @@
 from urllib import request
+from django.http import Http404
 from rest_framework import viewsets, status
 from .serializers import *
 from rooms.serializers import RoomDefaultSerializer
-from .models import Goal
+from .models import *
 from alarms.models import Alarm
 from rooms.models import Room
 from rest_framework.permissions import IsAuthenticated
@@ -153,3 +154,45 @@ class GroupRecommendationAPI(APIView):
         # 직렬화
         serializer = RoomDefaultSerializer(rooms, many=True)
         return Response(serializer.data, status=200)
+
+
+# 달성 보고 리스트
+class AchievementReportListAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        achievement_reports = AchievementReport.objects.all().order_by('-pk')
+        serializer = AchievementReportSerializer(achievement_reports, many = True)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+# 달성 보고 디테일
+class AchievementReportDetailAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, pk):
+        try:
+            return AchievementReport.objects.get(pk=pk)
+        except AchievementReport.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        achievement_report = self.get_object(pk)
+        serializer = AchievementReportSerializer(achievement_report)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+# 달성보고 생성
+class AchievementReportCreateAPI(APIView):
+    permission_classes = [IsAuthenticated, GoalOwnershipPermission]
+
+    def post(self, request, goal_id, format=None):
+        goal = Goal.objects.get(pk=goal_id)
+        if goal.is_completed:
+            return Response({'error': '이미 보고가 작성된 목표입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer = AchievementReportSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(goal=goal)
+            goal.is_completed = True
+            goal.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
