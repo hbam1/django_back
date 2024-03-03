@@ -17,9 +17,11 @@ django-environ==0.11.2
 django-timezone-field==6.1.0
 djangorestframework==3.14.0
 djangorestframework-simplejwt==5.3.1
+drf-yasg==1.21.7
 elastic-transport==8.12.0
 elasticsearch==8.12.1
 elasticsearch-dsl==8.12.0
+inflection==0.5.1
 iniconfig==2.0.0
 kombu==5.3.5
 packaging==23.2
@@ -31,10 +33,12 @@ pytest==8.0.2
 python-crontab==3.0.0
 python-dateutil==2.8.2
 pytz==2024.1
+PyYAML==6.0.1
 redis==5.0.1
 six==1.16.0
 sqlparse==0.4.4
 tzdata==2024.1
+uritemplate==4.1.1
 urllib3==2.2.1
 vine==5.1.0
 wcwidth==0.2.13

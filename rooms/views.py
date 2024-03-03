@@ -12,6 +12,9 @@ from rest_framework.views import APIView
 from django.utils import timezone
 from django.db.models import Sum
 from django.core.exceptions import ObjectDoesNotExist
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 
 # Method import
 from elasticsearch_dsl import Search, Q
@@ -31,6 +34,19 @@ class GoalListAPI(APIView):
 # 방 생성
 class RoomCreateAPI(APIView):
     permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        tags=["방 생성"],
+        request_body=RoomCreateSerializer,
+        manual_parameters=[
+            openapi.Parameter('goal_id', openapi.IN_QUERY, description="Goal ID", type=openapi.TYPE_INTEGER, required=True)
+        ],
+        responses={
+            status.HTTP_400_BAD_REQUEST: "Goal Does Not Exist",
+            status.HTTP_403_FORBIDDEN: "Deposit not allowed",
+            status.HTTP_201_CREATED: "Room Created"
+        }
+    )
     def post(self, request):
         goal_id = request.data.pop('goal_id', None)
         serializer = RoomCreateSerializer(data=request.data)
