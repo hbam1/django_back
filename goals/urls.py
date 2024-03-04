@@ -19,9 +19,3 @@ urlpatterns = [
     # router 아래에 url을 작성하면 경로를 못찾음
     path("", include(router.urls)),
 ]
-
-# "detail/<int:pk>/"
-# "viewset/"
-# "viewset/1/" get 요청
-# "viewset/1/" patch 요청
-# "viewset/" get 요청

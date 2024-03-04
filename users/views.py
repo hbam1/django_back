@@ -1,5 +1,7 @@
 import jwt
 from rest_framework.views import APIView
+
+from goals.serializers import GoalSerializer
 from .serializers import *
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from rest_framework import status, viewsets
@@ -41,10 +43,6 @@ class RegisterAPIView(APIView):
                 status=status.HTTP_200_OK,
             )
 
-            # jwt 토큰 => 쿠키에 저장
-            res.set_cookie("access", access_token, httponly=True)
-            res.set_cookie("refresh", refresh_token, httponly=True)
-
             return res
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -70,9 +68,8 @@ class AuthAPIView(APIView):
             'nickname': user.nickname,
             'fuel': user.fuel,
             'all_goals': all_goals,
-            'completed_goals': completed_goals
+            'completed_goals': completed_goals,
         }
-
         serializer = UserInfoSerializer(data=data)
         serializer.is_valid(raise_exception=True)
 

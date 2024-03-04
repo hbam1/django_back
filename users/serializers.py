@@ -26,7 +26,7 @@ class UserSignUpSerializer(serializers.Serializer):
 
 # 회원정보조회
 class UserInfoSerializer(serializers.Serializer):
-    nickname = serializers.CharField(source='user.nickname')
-    fuel = serializers.IntegerField(source='user.fuel')
+    nickname = serializers.CharField()
+    fuel = serializers.IntegerField()
     completed_goals = serializers.IntegerField()
     all_goals = serializers.IntegerField()

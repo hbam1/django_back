@@ -67,6 +67,7 @@ class UserGoalListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Goal
         fields = (
+            "id",
             "title",
             "is_in_group",
             "content",
