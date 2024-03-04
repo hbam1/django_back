@@ -6,8 +6,6 @@ router = routers.DefaultRouter()
 router.register("", views.GoalViewSet)
 
 urlpatterns = [
-    # 유저의 전체 목표 리스트
-    path('user_list/', views.UserGoalListAPI.as_view()),
     # viewset이 위로 올라갔을 때 url이 꼬일 수 있는 것 주의
     path("tags/", views.ParentTagListAPI.as_view()),
     path("subtags/<int:pk>", views.SubTagListAPI.as_view()),
@@ -20,9 +18,3 @@ urlpatterns = [
     # router 아래에 url을 작성하면 경로를 못찾음
     path("", include(router.urls)),
 ]
-
-# "detail/<int:pk>/"
-# "viewset/"
-# "viewset/1/" get 요청
-# "viewset/1/" patch 요청
-# "viewset/" get 요청

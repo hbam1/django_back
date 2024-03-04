@@ -5,7 +5,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, Toke
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
-from django.shortcuts import render, get_object_or_404
 from django.conf import settings
 import random
 import string
@@ -15,7 +14,17 @@ from rest_framework.permissions import IsAuthenticated
 
 # 회원가입
 class RegisterAPIView(APIView):
+    # 인증 필수
+    def get_permissions(self):
+        if self.request.method == 'PATCH':
+            return [IsAuthenticated()]
+        return []
+
     def post(self, request):
+        # 이메일 중복이면 생성불가
+        if User.objects.filter(email=request.data['email']).exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         serializer = UserSignUpSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             # 랜덤한 닉네임 생성
@@ -41,11 +50,15 @@ class RegisterAPIView(APIView):
                 status=status.HTTP_200_OK,
             )
 
-            # jwt 토큰 => 쿠키에 저장
-            res.set_cookie("access", access_token, httponly=True)
-            res.set_cookie("refresh", refresh_token, httponly=True)
-
             return res
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        user = request.user
+        serializer = UserSignupDetailSerializer(user, data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -70,9 +83,8 @@ class AuthAPIView(APIView):
             'nickname': user.nickname,
             'fuel': user.fuel,
             'all_goals': all_goals,
-            'completed_goals': completed_goals
+            'completed_goals': completed_goals,
         }
-
         serializer = UserInfoSerializer(data=data)
         serializer.is_valid(raise_exception=True)
 
@@ -123,3 +135,23 @@ class AuthAPIView(APIView):
             # 후에 리턴값은 변경
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# 마이페이지용 회원정보조회
+class UserDetailAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserInfSerializer
+
+    def get_object(self):
+        return self.request.user
+
+    def get(self, request):
+        try:
+            user_instance = self.get_object()
+            serializer = UserInfSerializer(user_instance, context={'request': request})
+            serialized_data = serializer.data
+            return Response(serialized_data, status=status.HTTP_200_OK)
+        except Exception as e:
+            error_message = str(e)
+            print(f"Error in UserDetailAPI: {error_message}")
+            return Response({"error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
