@@ -28,7 +28,7 @@ class GoalDefaultSerializer(serializers.ModelSerializer):
         model = Goal
         fields = '__all__'
 
-# 목표 생성 serializer
+# 목표 생성, 조회 serializer
 class GoalSerializer(serializers.ModelSerializer):
     # tag들은 임의로 만들어서 넣지 못하게 views에서 처리
     tags = TagSerializer(many=True, read_only=True)
@@ -50,12 +50,14 @@ class UserForARSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'nickname']  # User 모델의 id와 nickname 필드를 전송
 
+
 class GoalForARSerializer(serializers.ModelSerializer):
     user = UserForARSerializer()  
 
     class Meta:
         model = Goal
         fields = ['id', 'title', 'user']  # Goal 모델의 id, title, user 필드를 전송
+
 
 class AchievementReportSerializer(serializers.ModelSerializer):
     goal = GoalForARSerializer(read_only=True)  # GoalForARSerializer를 사용하여 goal 필드를 직렬화

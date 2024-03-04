@@ -3,7 +3,7 @@ from rooms.models import Room
 from alarms.models import Alarm
 from goals.models import Goal
 from activities.models import UserActivityInfo
-from .serializers import RoomCreateSerializer, GoalListSerializer
+from .serializers import RoomCreateSerializer, GoalListSerializer, RoomListSerializer
 from goals.serializers import GoalDefaultSerializer
 from rest_framework.permissions import IsAuthenticated
 from .permissions import RoomAdminPermission
@@ -14,7 +14,6 @@ from django.db.models import Sum
 from django.core.exceptions import ObjectDoesNotExist
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
 
 # Method import
 from elasticsearch_dsl import Search, Q
@@ -201,3 +200,12 @@ def distribute_reward(room: Room):
         user.coin += int(reward)
         user.coin += activity_info.deposit_left
         user.save()
+
+# 그룹 리스트
+class RoomListAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        rooms = Room.objects.filter(members=request.user)
+        serializer = RoomListSerializer(rooms, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
