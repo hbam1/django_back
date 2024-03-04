@@ -56,12 +56,19 @@ class GoalViewSet(viewsets.ModelViewSet):
         return Response(status=204)
 
 # 태그 조회
-class TagListAPI(APIView):
+class ParentTagListAPI(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        tags = Tag.objects.all().order_by('-tag_name')
+        tags = Tag.objects.filter(parent_tag=None)
         serializer = TagSerializer(tags, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class SubTagListAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, pk):
+        tags = Tag.objects.filter(parent_tag__id=pk)
+        serializer = TagSerializer(tags, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)   
 
 # 활동 태그 조회
 class ActivityTagListAPI(APIView):

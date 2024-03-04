@@ -7,7 +7,7 @@ class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
-        fields = ("tag_name", "parent_tag")
+        fields = ("id", "tag_name", "parent_tag")
 
     # 부모 태그 이름으로 클라이언트에게 반환
     def get_parent_tag(self, obj):
@@ -19,7 +19,7 @@ class TagSerializer(serializers.ModelSerializer):
 class ActivityTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityTag
-        fields = ("tag_name",)
+        fields = ("id", "tag_name",)
 
 # 임시로 사용하는 기본 목표 시리얼라이저(전체 포함)
 # 현재 사용 범위 : 추천 get view(관리를 위해 사용시 추가바람)
@@ -67,6 +67,7 @@ class UserGoalListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Goal
         fields = (
+            "id",
             "title",
             "is_in_group",
             "content",

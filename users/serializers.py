@@ -26,8 +26,8 @@ class UserSignUpSerializer(serializers.Serializer):
 
 # 회원정보조회
 class UserInfoSerializer(serializers.Serializer):
-    nickname = serializers.CharField(source='user.nickname')
-    fuel = serializers.IntegerField(source='user.fuel')
+    nickname = serializers.CharField()
+    fuel = serializers.IntegerField()
     completed_goals = serializers.IntegerField()
     all_goals = serializers.IntegerField()
 
@@ -36,3 +36,14 @@ class UserInfSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = "__all__"
+
+# 회원가입 후 유저세부정보 입력
+class UserSignupDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "nickname",
+            "profile",
+            "region",
+            "region_detail",
+        )
