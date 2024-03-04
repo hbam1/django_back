@@ -9,7 +9,8 @@ urlpatterns = [
     # 유저의 전체 목표 리스트
     path('user_list/', views.UserGoalListAPI.as_view()),
     # viewset이 위로 올라갔을 때 url이 꼬일 수 있는 것 주의
-    path("tags/", views.TagListAPI.as_view()),
+    path("tags/", views.ParentTagListAPI.as_view()),
+    path("subtags/<int:pk>", views.SubTagListAPI.as_view()),
     path("activity_tags/", views.ActivityTagListAPI.as_view()),
     # 유저의 목표에 대한 추천 그룹 반환 API
     path('recommend_group/<int:goal_id>/', views.GroupRecommendationAPI.as_view()),
