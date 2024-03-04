@@ -26,3 +26,15 @@ class AuthLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = MemberAuthentication
         exclude = ("content", "image",)
+
+# 자유게시판 게시글
+class FreeBoardPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = '__all__'
+        read_only_fields = (
+            "author",
+            "room",
+            "created_at",
+            "voter",
+        )

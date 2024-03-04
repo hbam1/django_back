@@ -29,3 +29,23 @@ class MemberAuthentication(models.Model):
     image = models.ImageField('사진', upload_to='authentication_images/', null=True, blank=True, help_text="인증 사진")
     is_completed = models.BooleanField(default=False, help_text="인증 완료 여부")
     created_date = models.DateTimeField(default=timezone.now, help_text="인증 생성 일자")
+
+# 자유게시판
+class Post(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author_post', help_text="작성자")
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='room_posts', null=True, help_text="방")
+    title = models.CharField(max_length=200, null=True, help_text="제목")
+    content = models.TextField(help_text="내용")
+    created_at = models.DateTimeField(auto_now_add=True, help_text="생성일자")
+    updated_at = models.DateTimeField(null=True, blank=True, auto_now=True, help_text="수정일자")
+    voter = models.ManyToManyField(User, related_name='voter_post', help_text="추천인")
+    notice = models.BooleanField(default=False, help_text="공지")
+
+# 게시물 댓글
+class Comment(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author_comment', help_text="작성자")
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments', help_text="게시물")
+    content = models.TextField(help_text="내용")
+    created_at = models.DateTimeField(auto_now_add=True, help_text="생성일자")
+    updated_at = models.DateTimeField(null=True, blank=True, auto_now=True, help_text="수정일자")    # 수정 일시
+    voter = models.ManyToManyField(User, related_name='voter_comment', help_text="추천인")
