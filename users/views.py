@@ -1,13 +1,10 @@
 import jwt
 from rest_framework.views import APIView
-
-from goals.serializers import GoalSerializer
 from .serializers import *
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
-from django.shortcuts import render, get_object_or_404
 from django.conf import settings
 import random
 import string
@@ -17,7 +14,17 @@ from rest_framework.permissions import IsAuthenticated
 
 # 회원가입
 class RegisterAPIView(APIView):
+    # 인증 필수
+    def get_permissions(self):
+        if self.request.method == 'PATCH':
+            return [IsAuthenticated()]
+        return []
+
     def post(self, request):
+        # 이메일 중복이면 생성불가
+        if User.objects.filter(email=request.data['email']).exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         serializer = UserSignUpSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             # 랜덤한 닉네임 생성
@@ -44,6 +51,14 @@ class RegisterAPIView(APIView):
             )
 
             return res
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        user = request.user
+        serializer = UserSignupDetailSerializer(user, data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
