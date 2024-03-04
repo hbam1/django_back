@@ -3,7 +3,7 @@ from . import views
 from rest_framework import routers
 
 router = routers.DefaultRouter()
-router.register("", views.FreeBoardViewSet)
+router.register("", views.FreeBoardViewSet, basename="activities")
 
 urlpatterns = [
     path("create/", views.MemberAuthCreateAPI.as_view()),
