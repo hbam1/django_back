@@ -135,3 +135,23 @@ class AuthAPIView(APIView):
             # 후에 리턴값은 변경
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# 마이페이지용 회원정보조회
+class UserDetailAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserInfSerializer
+
+    def get_object(self):
+        return self.request.user
+
+    def get(self, request):
+        try:
+            user_instance = self.get_object()
+            serializer = UserInfSerializer(user_instance, context={'request': request})
+            serialized_data = serializer.data
+            return Response(serialized_data, status=status.HTTP_200_OK)
+        except Exception as e:
+            error_message = str(e)
+            print(f"Error in UserDetailAPI: {error_message}")
+            return Response({"error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
