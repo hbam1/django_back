@@ -9,6 +9,8 @@ from rest_framework.permissions import IsAuthenticated
 from .permissions import GoalOwnershipPermission
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from drf_yasg.utils import swagger_auto_schema
+
 
 # Method import
 from elasticsearch_dsl import Search, Q
@@ -50,6 +52,18 @@ class GoalViewSet(viewsets.ModelViewSet):
         # 현재 유저를 저장
         serializer.save(user=self.request.user)
 
+    @swagger_auto_schema(
+        tags=["목표 리스트"],
+        responses={
+            status.HTTP_200_OK: GoalSerializer(many=True)
+        }
+    )
+    def list(self, request):
+        user = request.user
+        goals = Goal.objects.filter(user=user).order_by('-id')
+        serializer = self.get_serializer(goals, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def delete(self, request, goal_id):
         goal = Goal.objects.get(pk=goal_id)
         goal.delete()
@@ -58,6 +72,12 @@ class GoalViewSet(viewsets.ModelViewSet):
 # 태그 조회
 class ParentTagListAPI(APIView):
     permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        tags=['태그 조회'],
+        operation_summary='부모 태그 목록 조회',
+        responses={status.HTTP_200_OK: TagSerializer(many=True)}
+    )
     def get(self, request):
         tags = Tag.objects.filter(parent_tag=None)
         serializer = TagSerializer(tags, many=True)
@@ -65,6 +85,12 @@ class ParentTagListAPI(APIView):
 
 class SubTagListAPI(APIView):
     permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        tags=['태그 조회'],
+        operation_summary='부모 태그에 속하는 하위 태그 목록 조회',
+        responses={status.HTTP_200_OK: TagSerializer(many=True)}
+    )
     def get(self, request, pk):
         tags = Tag.objects.filter(parent_tag__id=pk)
         serializer = TagSerializer(tags, many=True)
@@ -73,6 +99,12 @@ class SubTagListAPI(APIView):
 # 활동 태그 조회
 class ActivityTagListAPI(APIView):
     permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        tags=['활동 태그 조회'],
+        operation_summary='활동 태그 목록 조회',
+        responses={status.HTTP_200_OK: ActivityTagSerializer(many=True)}
+    )
     def get(self, request):
         activity_tags = ActivityTag.objects.all()
         serializer = ActivityTagSerializer(activity_tags, many=True)
@@ -190,12 +222,3 @@ class AchievementReportCreateAPI(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-# 유저의 전체 목표 리스트
-class UserGoalListAPI(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-        user = request.user
-        goals = Goal.objects.filter(user=user).order_by('-id')
-        serializers = UserGoalListSerializer(goals, many=True)
-        return Response(serializers.data, status=status.HTTP_200_OK)
