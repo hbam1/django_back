@@ -30,3 +30,9 @@ class UserInfoSerializer(serializers.Serializer):
     fuel = serializers.IntegerField(source='user.fuel')
     completed_goals = serializers.IntegerField()
     all_goals = serializers.IntegerField()
+
+#마이페이지용 회원정보조회
+class UserInfSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = "__all__"
