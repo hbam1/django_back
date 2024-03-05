@@ -57,8 +57,8 @@ class LogListAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     # pk = room_id
-    def get(self, request, pk):
-        room = Room.objects.get(pk=pk)
+    def get(self, request, room_id):
+        room = Room.objects.get(pk=room_id)
         auth_logs = MemberAuthentication.objects.filter(room=room).filter(is_completed=True).order_by('-created_date')
         serializer = AuthLogSerializer(auth_logs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
