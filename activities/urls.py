@@ -7,6 +7,7 @@ router.register("", views.FreeBoardViewSet, basename="activities")
 router.register("", views.CommentViewSet, basename="activities")
 
 urlpatterns = [
+    path("create_authentication/", views.CreateAuthenticationAPI.as_view()),
     path("create/", views.MemberAuthCreateAPI.as_view()),
     path("accept/<int:pk>/", views.MemberAuthAcceptAPI.as_view()),
     path("reject/<int:pk>/", views.MemberAuthRejectAPI.as_view()),
