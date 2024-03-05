@@ -11,7 +11,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 
-
 # Method import
 from elasticsearch_dsl import Search, Q
 
@@ -137,7 +136,7 @@ class GroupRecommendationAPI(APIView):
             should_queries.append(tag_query)
 
         for activity_tag_id in activity_tag_ids:
-            activity_tag_query = Q('nested', path='activityTags', query=Q('terms', **{'activityTags.tag_id': [activity_tag_id]}), boost=3)
+            activity_tag_query = Q('nested', path='activity_tags', query=Q('terms', **{'activity_tags.tag_id': [activity_tag_id]}), boost=3)
             should_queries.append(activity_tag_query)
 
         # favor_offline이 같을 경우 높은 점수

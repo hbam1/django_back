@@ -82,6 +82,7 @@ CORS_ALLOW_CREDENTIALS = True
 # 접근 가능한 url 을 따로 관리
 CORS_ORIGIN_WHITELIST = (
     "http://localhost:5173",
+    "http://localhost:9200",
 )
 
 ROOT_URLCONF = "config.urls"
