@@ -31,11 +31,20 @@ class UserInfoSerializer(serializers.Serializer):
     completed_goals = serializers.IntegerField()
     all_goals = serializers.IntegerField()
 
-#마이페이지용 회원정보조회
+# 마이페이지용 회원정보조회
 class UserInfSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = "__all__"
+
+# 알람에 필요한 회원정보
+class UserInfAlarmSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "nickname",
+            "fuel",
+        )
 
 # 회원가입 후 유저세부정보 입력
 class UserSignupDetailSerializer(serializers.ModelSerializer):

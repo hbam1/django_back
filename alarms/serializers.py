@@ -3,6 +3,7 @@ from .models import Alarm
 from goals.models import Goal
 from goals.serializers import TagSerializer, ActivityTagSerializer
 from rooms.models import Room
+from users.serializers import UserInfAlarmSerializer 
 
 
 # 알람 생성
@@ -37,11 +38,7 @@ class AlarmRoomSerializer(serializers.ModelSerializer):
 class AlarmListSerializer(serializers.ModelSerializer):
     goals = AlarmGoalSerializer(read_only=True)
     rooms = AlarmRoomSerializer(read_only=True)
-    alarm_from = serializers.SerializerMethodField()
-
-    # alarm_from을 id가 아닌 nickname으로 받기 위함
-    def get_alarm_from(self, obj):
-        return obj.alarm_from.nickname if obj.alarm_from else None
+    alarm_from = UserInfAlarmSerializer(read_only=True)
 
     class Meta:
         model = Alarm
