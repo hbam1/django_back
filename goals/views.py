@@ -34,15 +34,32 @@ class GoalViewSet(viewsets.ModelViewSet):
 
         # 태그 입력
         tag_names = request.data.get("tags")  # str을 가진 list 반환
-        for tag_name in tag_names:
-            tag = Tag.objects.get(tag_name=tag_name)
-            serializer.instance.tags.add(tag)
+        if tag_names is not None:
+            for tag_name in tag_names:
+                try:
+                    tag = Tag.objects.get(tag_name=tag_name)
+                    serializer.instance.tags.add(tag)
+                except Tag.DoesNotExist:
+                    # 태그를 찾지 못할 때 에러 처리
+                    return Response({"error": f"Tag '{tag_name}' does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # tag_names가 None일 때 처리
+            return Response({"error": "Tag names are missing"}, status=status.HTTP_400_BAD_REQUEST)
 
         # 활동 태그 입력
         activity_tag_names = request.data.get("activity_tags")  # str을 가진 list 반환
-        for activity_tag_name in activity_tag_names:
-            activity_tag = ActivityTag.objects.get(tag_name=activity_tag_name)
-            serializer.instance.activity_tags.add(activity_tag)
+        if activity_tag_names is not None:
+            for activity_tag_name in activity_tag_names:
+                try:
+                    activity_tag = ActivityTag.objects.get(tag_name=activity_tag_name)
+                    serializer.instance.activity_tags.add(activity_tag)
+                except ActivityTag.DoesNotExist:
+                    # 활동 태그를 찾지 못할 때 에러 처리
+                    return Response({"error": f"Activity tag '{activity_tag_name}' does not exist"},
+                                    status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # activity_tag_names가 None일 때 처리
+            return Response({"error": "Activity tag names are missing"}, status=status.HTTP_400_BAD_REQUEST)
 
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)

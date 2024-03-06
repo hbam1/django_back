@@ -1,11 +1,6 @@
 import pytest
 from users.models import User
-from rest_framework.test import APIClient
 from rest_framework import status
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 @pytest.mark.django_db
 def test_user_login(api_client):
