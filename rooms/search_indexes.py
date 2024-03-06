@@ -40,5 +40,5 @@ class RoomDocument(Document):
     def prepare_tags(self, instance):
         return [{'tag_id': tag.id} for tag in instance.tags.all()]
 
-    def prepare_activityTags(self, instance):
+    def prepare_activity_tags(self, instance):
         return [{'tag_id': tag.id} for tag in instance.activity_tags.all()]
