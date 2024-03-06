@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rooms.models import Room
 from rooms.permissions import RoomAttendancePermission, RoomAdminPermission
 from rest_framework.exceptions import PermissionDenied
-from .tasks import schedule_authentication
+from .tasks import create_periodic_task
 
 #인증 제출
 class MemberAuthCreateAPI(APIView):
@@ -191,15 +191,14 @@ class LikeCommentAPI(APIView):
 # 방의 주기적인 인증 생성
 class CreateAuthenticationAPI(APIView):
     permission_classes = [IsAuthenticated, RoomAdminPermission]
-    def post(self, request):
+    def post(self, request, room_id):
         user_id = self.request.user.id
-        room_id = request.data.get('room_id')
         day_of_week = request.data.get('day_of_week')
         hour = request.data.get('hour')
         minute = request.data.get('minute')
         auth_duration = request.data.get('auth_duration')
 
         # Schedule the authentication task using Celery
-        schedule_authentication.apply_async(args=(room_id, user_id, day_of_week, hour, minute, auth_duration))
+        create_periodic_task(room_id, user_id, day_of_week, hour, minute, auth_duration)
 
         return Response({'message': 'Authentication scheduled successfully.'}, status=status.HTTP_200_OK)
