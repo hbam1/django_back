@@ -112,7 +112,7 @@ class MemberRecommendationAPI(APIView):
             should_queries.append(tag_query)
 
         for activity_tag_id in activity_tags_ids:
-            activity_tag_query = Q('nested', path='activityTags', query=Q('terms', **{'activityTags.tag_id': [activity_tag_id]}), boost=3)
+            activity_tag_query = Q('nested', path='activity_tags', query=Q('terms', **{'activity_tags.tag_id': [activity_tag_id]}), boost=3)
             should_queries.append(activity_tag_query)
 
         # favor_offline이 일치하면 높은 점수
@@ -205,6 +205,11 @@ def distribute_reward(room: Room):
 class RoomListAPI(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        tags=['그룹 리스트 조회'],
+        operation_summary='그룹 리스트 조회',
+        responses={status.HTTP_200_OK: RoomListSerializer(many=True)}
+    )
     def get(self, request):
         rooms = Room.objects.filter(members=request.user)
         serializer = RoomListSerializer(rooms, many=True, context={'request': request})

@@ -36,5 +36,19 @@ class FreeBoardPostSerializer(serializers.ModelSerializer):
             "author",
             "room",
             "created_at",
+            "updated_at",
+            "voter",
+        )
+
+# 자유게시판 게시글 댓글
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = '__all__'
+        read_only_fields = (
+            "author",
+            "post",
+            "created_at",
+            "updated_at",
             "voter",
         )
