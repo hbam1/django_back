@@ -205,6 +205,11 @@ def distribute_reward(room: Room):
 class RoomListAPI(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        tags=['그룹 리스트 조회'],
+        operation_summary='그룹 리스트 조회',
+        responses={status.HTTP_200_OK: RoomListSerializer(many=True)}
+    )
     def get(self, request):
         rooms = Room.objects.filter(members=request.user)
         serializer = RoomListSerializer(rooms, many=True, context={'request': request})

@@ -9,8 +9,9 @@ from rest_framework.permissions import IsAuthenticated
 from .permissions import GoalOwnershipPermission
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-
+from rest_framework.decorators import action
 
 # Method import
 from elasticsearch_dsl import Search, Q
@@ -27,6 +28,22 @@ class GoalViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'title': openapi.Schema(type=openapi.TYPE_STRING),
+                'content': openapi.Schema(type=openapi.TYPE_STRING),
+                'tags': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING)),
+                'activity_tags': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING))
+            }
+        ),
+        responses={
+            201: 'Created',
+            400: 'Bad Request'
+        },
+        tags=['목표 생성']
+    )
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -99,6 +116,7 @@ class ParentTagListAPI(APIView):
         tags = Tag.objects.filter(parent_tag=None)
         serializer = TagSerializer(tags, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class SubTagListAPI(APIView):
     permission_classes = [IsAuthenticated]
