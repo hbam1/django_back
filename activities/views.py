@@ -1,13 +1,62 @@
 from rest_framework import viewsets, status
-from .models import MemberAuthentication, Post, Comment
-from .serializers import MemberAuthenticationSerializer, AuthLogSerializer, FreeBoardPostSerializer, CommentSerializer
+from .models import MemberAuthentication, Post, Comment, Authentication
+from .serializers import MemberAuthenticationSerializer, AuthLogSerializer, FreeBoardPostSerializer, CommentSerializer, AuthListSerializer
+from users.serializers import MemberListSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rooms.models import Room
+from goals.models import Goal
 from rooms.permissions import RoomAttendancePermission, RoomAdminPermission
 from rest_framework.exceptions import PermissionDenied
 from .tasks import create_periodic_task
+from django.db.models import Case, When, Value, IntegerField
+
+class MemberListAPI(APIView):
+    permission_classes = [IsAuthenticated, RoomAdminPermission]
+    
+    def get(self, request, room_id):
+        room = Room.objects.get(id=room_id)
+        members_ordered = room.members.annotate(
+        is_master=Case(
+        When(id=room.master.id, then=Value(0)),
+            default=Value(1),
+            output_field=IntegerField(),
+        )).order_by('is_master')
+        serializer = MemberListSerializer(members_ordered, many=True)
+
+        member_data_dict = []
+        for member_data_origin in serializer.data:
+            member_data = member_data_origin.copy()
+            member_data['deposit_left'] = room.activity_infos.get(user__id=member_data['id']).deposit_left
+            member_data['goal'] = Goal.objects.get(belonging_group_id=room_id).title
+            member_data_dict.append(member_data)
+        
+        return Response(member_data_dict, status=200)
+
+
+#인증 Viewset
+class AuthenticationViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated] 
+    serializer_class = AuthListSerializer
+    queryset = Authentication.objects.all()
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+        data = self.request.data
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+    def perform_destroy(self, instance):
+        auth_id = self.kwargs['pk']
+        try:
+            authentication = Authentication.objects.get(id=auth_id)
+            authentication.delete()
+            return Response(status=204)
+        except Authentication.DoesNotExist:
+            return Response(status=404)
+
 
 #인증 제출
 class MemberAuthCreateAPI(APIView):
@@ -51,15 +100,23 @@ class MemberAuthRejectAPI(APIView):
         auth.save()
 
         return Response(status=status.HTTP_200_OK)
-    
+
+
+ #인증 리스트
+class AuthListAPI(APIView):
+    permission_classes = [IsAuthenticated, RoomAdminPermission]
+
+    def get(self, request, room_id):
+        auths = Authentication.objects.filter(room__id=room_id)
+        serializer = AuthListSerializer(auths, many=True)
+        return Response(serializer.data, status=200)
 
 #로그 list
 class LogListAPI(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, RoomAdminPermission]
 
-    # pk = room_id
-    def get(self, request, pk):
-        room = Room.objects.get(pk=pk)
+    def get(self, request, room_id):
+        room = Room.objects.get(id=room_id)
         auth_logs = MemberAuthentication.objects.filter(room=room).filter(is_completed=True).order_by('-created_date')
         serializer = AuthLogSerializer(auth_logs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -191,7 +248,7 @@ class LikeCommentAPI(APIView):
 
 
 # 방의 주기적인 인증 생성
-class CreateAuthenticationAPI(APIView):
+class CreateAutoAuthenticationAPI(APIView):
     permission_classes = [IsAuthenticated, RoomAdminPermission]
 
     def post(self, request, room_id):

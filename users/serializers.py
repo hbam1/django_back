@@ -37,6 +37,13 @@ class UserInfSerializer(serializers.ModelSerializer):
         model = User
         fields = "__all__"
 
+#멤버 리스트 조회용
+class MemberListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = "__all__"
+        depth = 1
+
 # 회원가입 후 유저세부정보 입력
 class UserSignupDetailSerializer(serializers.ModelSerializer):
     class Meta:

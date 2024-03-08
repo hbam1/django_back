@@ -23,9 +23,24 @@ class MemberAuthenticationSerializer(serializers.ModelSerializer):
 
 #로그 출력 용
 class AuthLogSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+    
     class Meta:
         model = MemberAuthentication
         exclude = ("content", "image",)
+
+    def get_user(self, obj):
+        user_info = {
+            'id': obj.user.id,
+            'nickname': obj.user.nickname
+        }
+        return user_info
+    
+# 개설된 전체 인증 조회용
+class AuthListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Authentication
+        fields = "__all__"
 
 # 자유게시판 게시글
 class FreeBoardPostSerializer(serializers.ModelSerializer):
