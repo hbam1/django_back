@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rooms.models import Room
 from rooms.permissions import RoomAttendancePermission, RoomAdminPermission
 from rest_framework.exceptions import PermissionDenied
+from .tasks import create_periodic_task
 
 #인증 제출
 class MemberAuthCreateAPI(APIView):
@@ -99,3 +100,108 @@ class FreeBoardViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("글 작성자만 삭제할 수 있습니다.")
 
         instance.delete()
+
+    def perform_update(self, serializer):
+        instance = self.get_object()
+
+        # 작성자만 수정할 수 있도록 확인
+        if instance.author != self.request.user:
+            raise PermissionDenied("글 작성자만 업데이트할 수 있습니다.")
+
+        serializer.save()
+
+
+# 자유게시판 게시글 댓글
+class CommentViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated, RoomAttendancePermission]
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        # 요청에 포함된 게시글의 ID를 가져옵니다.
+        post_id = self.kwargs.get('post_id')
+        # 해당 게시글에 속한 댓글만 필터링하여 반환합니다.
+        return Comment.objects.filter(post__id=post_id).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        post_id = self.kwargs.get('post_id')
+        post = Post.objects.get(pk=post_id)
+
+        serializer.save(author=self.request.user, post=post)
+
+    def perform_destroy(self, instance):
+        # 댓글 작성자만 삭제할 수 있도록 확인
+        if instance.author != self.request.user:
+            raise PermissionDenied("댓글 작성자만 삭제할 수 있습니다.")
+
+        instance.delete()
+
+    def perform_update(self, serializer):
+        instance = self.get_object()
+
+        # 작성자만 수정할 수 있도록 확인
+        if instance.author != self.request.user:
+            raise PermissionDenied("댓글 작성자만 수정할 수 있습니다.")
+
+        serializer.save()
+
+
+class LikePostAPI(APIView):
+    permission_classes = [IsAuthenticated, RoomAttendancePermission]
+
+    def patch(self, request):
+        post_id = request.data.get('post_id')
+        try:
+            post = Post.objects.get(pk=post_id)
+        except Post.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        # 본인이 작성한 글에는 좋아요 불가
+        if post.author == self.request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        user = self.request.user
+        if user in post.voter.all():
+            post.voter.remove(user)  # 이미 좋아요를 한 경우, 좋아요 취소
+        else:
+            post.voter.add(user)  # 좋아요를 하지 않은 경우, 좋아요 추가
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class LikeCommentAPI(APIView):
+    permission_classes = [IsAuthenticated, RoomAttendancePermission]
+
+    def patch(self, request):
+        comment_id = request.data.get('comment_id')
+        try:
+            comment = Comment.objects.get(pk=comment_id)
+        except Comment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        # 본인이 작성한 글에는 좋아요 불가
+        if comment.author == self.request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        user = self.request.user
+        if user in comment.voter.all():
+            comment.voter.remove(user)  # 이미 좋아요를 한 경우, 좋아요 취소
+        else:
+            comment.voter.add(user)  # 좋아요를 하지 않은 경우, 좋아요 추가
+
+        return Response(status=status.HTTP_200_OK)
+
+
+# 방의 주기적인 인증 생성
+class CreateAuthenticationAPI(APIView):
+    permission_classes = [IsAuthenticated, RoomAdminPermission]
+
+    def post(self, request, room_id):
+        user_id = self.request.user.id
+        day_of_week = request.data.get('day_of_week')
+        hour = request.data.get('hour')
+        minute = request.data.get('minute')
+        auth_duration = request.data.get('auth_duration')
+
+        # Schedule the authentication task using Celery
+        create_periodic_task(room_id, user_id, day_of_week, hour, minute, auth_duration)
+
+        return Response({'message': 'Authentication scheduled successfully.'}, status=status.HTTP_200_OK)
