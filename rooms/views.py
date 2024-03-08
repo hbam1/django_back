@@ -4,7 +4,6 @@ from alarms.models import Alarm
 from goals.models import Goal
 from activities.models import UserActivityInfo
 from .serializers import RoomCreateSerializer, GoalListSerializer, RoomListSerializer
-from goals.serializers import GoalDefaultSerializer
 from rest_framework.permissions import IsAuthenticated
 from .permissions import RoomAdminPermission
 from rest_framework.response import Response
@@ -144,11 +143,11 @@ class MemberRecommendationAPI(APIView):
         response = s.execute()
 
         # Score 내림차순 정렬 상태를 유지하며 인스턴스화
-        hit_scores = {hit.meta.id: hit.meta.score for hit in response if hit.meta.id not in is_pending}
+        hit_scores = {hit.meta.id: hit.meta.score for hit in response if int(hit.meta.id) not in is_pending}
         goals = sorted(Goal.objects.filter(pk__in=hit_scores.keys()), key=lambda goal: hit_scores[str(goal.pk)], reverse=True)
         
         # 직렬화
-        serializer = GoalDefaultSerializer(goals, many=True)
+        serializer = GoalListSerializer(goals, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 # 방 활성화
@@ -205,6 +204,11 @@ def distribute_reward(room: Room):
 class RoomListAPI(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        tags=['그룹 리스트 조회'],
+        operation_summary='그룹 리스트 조회',
+        responses={status.HTTP_200_OK: RoomListSerializer(many=True)}
+    )
     def get(self, request):
         rooms = Room.objects.filter(members=request.user)
         serializer = RoomListSerializer(rooms, many=True, context={'request': request})
