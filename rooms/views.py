@@ -213,3 +213,15 @@ class RoomListAPI(APIView):
         rooms = Room.objects.filter(members=request.user)
         serializer = RoomListSerializer(rooms, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class RoomGetAPI(APIView):
+    permission_classes = [IsAuthenticated, RoomAdminPermission]
+
+    def get(self, request, room_id):
+        try:
+            room = Room.objects.get(id=room_id)
+            serializer = RoomListSerializer(room)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            return Response(status=400)

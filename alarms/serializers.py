@@ -4,15 +4,6 @@ from goals.models import Goal
 from goals.serializers import TagSerializer, ActivityTagSerializer
 from rooms.models import Room
 
-
-# 알람 생성
-class AlarmSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Alarm
-        exclude = ('alarm_from',)
-
-
 # 알람 목표
 class AlarmGoalSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
@@ -41,3 +32,11 @@ class AlarmListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alarm
         fields = "__all__"
+
+
+# 알람 생성
+class AlarmSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Alarm
+        exclude = ('alarm_from',)

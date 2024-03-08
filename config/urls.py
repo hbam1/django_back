@@ -20,6 +20,9 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 # swagger setting
 schema_view = get_schema_view(
    openapi.Info(
@@ -44,5 +47,8 @@ urlpatterns = [
     path("api/goals/", include("goals.urls")),
     path("api/rooms/", include("rooms.urls")),
     path("api/alarms/", include("alarms.urls")),
-    # path("api/rooms/<int:room_id>/activities/", include("activities.urls")),
+    path("api/rooms/<int:room_id>/activities/", include("activities.urls")),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
