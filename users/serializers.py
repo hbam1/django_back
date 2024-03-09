@@ -25,7 +25,7 @@ class UserSignUpSerializer(serializers.Serializer):
 
 
 # 회원정보조회
-class UserInfoSerializer(serializers.Serializer):
+class UserMainInfoSerializer(serializers.Serializer):
     nickname = serializers.CharField()
     fuel = serializers.IntegerField()
     completed_goals = serializers.IntegerField()
@@ -37,10 +37,21 @@ class UserSearchResultSerializer(serializers.ModelSerializer):
         fields = ("id", "nickname")
 
 #마이페이지용 회원정보조회
-class UserInfSerializer(serializers.ModelSerializer):
+class UserDetailInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = "__all__"
+        read_only_fields = (
+            "email",
+            "fuel",
+            "new",
+            "coin",
+            "created_at",
+            "updated_at",
+            "is_superuser",
+            "is_active",
+            "is_staff",
+        )
 
 #멤버 리스트 조회용
 class MemberListSerializer(serializers.ModelSerializer):

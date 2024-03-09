@@ -36,7 +36,7 @@ class MemberListAPI(APIView):
         return Response(member_data_dict, status=status.HTTP_200_OK)
 
 
-#인증 Viewset
+# 그룹장이 만드는 인증 Viewset
 class AuthenticationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated] 
     serializer_class = AuthListSerializer
@@ -59,9 +59,14 @@ class AuthenticationViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-#인증 제출
-class MemberAuthCreateAPI(APIView):
-    permission_classes = [IsAuthenticated]
+#인증 제출 및 인증 리스트
+class MemberAuthAPI(APIView):
+    permission_classes = [IsAuthenticated, RoomAdminPermission]
+
+    def get(self, request, room_id):
+        auths = Authentication.objects.filter(room__id=room_id)
+        serializer = AuthListSerializer(auths, many=True)
+        return Response(serializer.data, status=200)
 
     def post(self, request):
         serializer = MemberAuthenticationSerializer(data = request.data)
