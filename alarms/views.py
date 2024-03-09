@@ -33,9 +33,9 @@ class AlarmListAPI(APIView):
 class AlarmRetrieveAPI(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, pk):
+    def get(self, request, alarm_id):
         try:
-            alarm = Alarm.objects.get(id=pk)
+            alarm = Alarm.objects.get(id=alarm_id)
             # 보안. 알람의 수신자가 아니면 접근할 수 없음
             if alarm.alarm_to != request.user:
                 return Response(status=status.HTTP_403_FORBIDDEN)
