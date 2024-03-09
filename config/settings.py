@@ -85,6 +85,15 @@ CORS_ORIGIN_WHITELIST = (
     "http://localhost:9200",
 )
 
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
 ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [

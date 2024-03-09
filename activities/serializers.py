@@ -42,6 +42,7 @@ class AuthListSerializer(serializers.ModelSerializer):
         model = Authentication
         fields = "__all__"
 
+
 # 자유게시판 게시글
 class FreeBoardPostSerializer(serializers.ModelSerializer):
     class Meta:
