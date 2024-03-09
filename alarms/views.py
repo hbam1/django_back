@@ -8,8 +8,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 
-# 알람 생성
-class AlarmCreateAPI(APIView):
+# 알람 리스트 조회 및 생성
+class AlarmAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -17,11 +17,6 @@ class AlarmCreateAPI(APIView):
         serializer.is_valid(raise_exception=True)  # 예외가 발생했을 때 에러를 발생시켜라
         alarm = serializer.save(alarm_from=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-# 알람 list
-class AlarmListAPI(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         alarms = Alarm.objects.get(alarm_to=request.user).order_by('-id')

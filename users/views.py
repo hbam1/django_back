@@ -13,7 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 
 
 # 회원가입
-class RegisterAPIView(APIView):
+class RegisterAPI(APIView):
     # 인증 필수
     def get_permissions(self):
         if self.request.method == 'PATCH':
@@ -53,12 +53,13 @@ class RegisterAPIView(APIView):
             return res
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # 회원가입 후 닉네임, 사는 지역 업데이트
     def patch(self, request):
         user = request.user
         serializer = UserSignupDetailSerializer(user, data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -69,7 +70,7 @@ class AuthAPIView(APIView):
             return [IsAuthenticated()]
         return []
 
-    # 유저 정보 확인
+    # 메인 페이지 유저 정보 확인
     def get(self, request):
         user = request.user
         goals = Goal.objects.filter(user=user)
@@ -85,7 +86,7 @@ class AuthAPIView(APIView):
             'all_goals': all_goals,
             'completed_goals': completed_goals,
         }
-        serializer = UserInfoSerializer(data=data)
+        serializer = UserMainInfoSerializer(data=data)
         serializer.is_valid(raise_exception=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -114,7 +115,27 @@ class AuthAPIView(APIView):
             )
             return res
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+
+# 마이페이지용 회원정보조회
+class UserDetailAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def get(self, request):
+        try:
+            user_instance = self.get_object()
+            serializer = UserDetailInfoSerializer(user_instance, context={'request': request})
+            serialized_data = serializer.data
+            return Response(serialized_data, status=status.HTTP_200_OK)
+        except Exception as e:
+            error_message = str(e)
+            print(f"Error in UserDetailAPI: {error_message}")
+            # Internal erro 수정 필요
+            return Response({"error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def patch(self, request):
         # JWT에서 인증된 사용자 정보를 가져옵니다.
@@ -129,29 +150,9 @@ class AuthAPIView(APIView):
             return Response("사용자를 찾을 수 없습니다.", status=status.HTTP_404_NOT_FOUND)
 
         # 전달된 데이터로 사용자 정보를 업데이트합니다.
-        serializer = UserInfoSerializer(user, data=request.data)
+        serializer = UserDetailInfoSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
             # 후에 리턴값은 변경
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# 마이페이지용 회원정보조회
-class UserDetailAPI(APIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = UserInfSerializer
-
-    def get_object(self):
-        return self.request.user
-
-    def get(self, request):
-        try:
-            user_instance = self.get_object()
-            serializer = UserInfSerializer(user_instance, context={'request': request})
-            serialized_data = serializer.data
-            return Response(serialized_data, status=status.HTTP_200_OK)
-        except Exception as e:
-            error_message = str(e)
-            print(f"Error in UserDetailAPI: {error_message}")
-            return Response({"error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
