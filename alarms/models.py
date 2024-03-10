@@ -10,4 +10,3 @@ class Alarm(models.Model):
     #alarm 보낼때 room 정보 필요
     room = models.ForeignKey(Room, related_name='alarms', on_delete=models.CASCADE, null=True, blank=True, help_text="방")
     goal = models.ForeignKey(Goal, related_name='goals', on_delete=models.CASCADE, null=True, blank=True, help_text="목표")
-    current_user_id = models.IntegerField(null=True, blank=True)
