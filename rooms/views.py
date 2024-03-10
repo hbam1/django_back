@@ -4,7 +4,6 @@ from alarms.models import Alarm
 from goals.models import Goal
 from activities.models import UserActivityInfo
 from .serializers import RoomCreateSerializer, GoalListSerializer, RoomListSerializer
-from goals.serializers import GoalDefaultSerializer
 from rest_framework.permissions import IsAuthenticated
 from .permissions import RoomAdminPermission
 from rest_framework.response import Response
@@ -31,7 +30,7 @@ class GoalListAPI(APIView):
 
 
 # 방 생성
-class RoomCreateAPI(APIView):
+class RoomAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
@@ -79,6 +78,16 @@ class RoomCreateAPI(APIView):
             )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @swagger_auto_schema(
+        tags=['그룹 리스트 조회'],
+        operation_summary='그룹 리스트 조회',
+        responses={status.HTTP_200_OK: RoomListSerializer(many=True)}
+    )
+    def get(self, request):
+        rooms = Room.objects.filter(members=request.user)
+        serializer = RoomListSerializer(rooms, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 # 유저 추천
 class MemberRecommendationAPI(APIView):
     # Custom Permission추가 / 기존의 room_admin_required 데코레이터 + get_object_or_404 기능을 대체함
@@ -112,7 +121,7 @@ class MemberRecommendationAPI(APIView):
             should_queries.append(tag_query)
 
         for activity_tag_id in activity_tags_ids:
-            activity_tag_query = Q('nested', path='activityTags', query=Q('terms', **{'activityTags.tag_id': [activity_tag_id]}), boost=3)
+            activity_tag_query = Q('nested', path='activity_tags', query=Q('terms', **{'activity_tags.tag_id': [activity_tag_id]}), boost=3)
             should_queries.append(activity_tag_query)
 
         # favor_offline이 일치하면 높은 점수
@@ -144,11 +153,11 @@ class MemberRecommendationAPI(APIView):
         response = s.execute()
 
         # Score 내림차순 정렬 상태를 유지하며 인스턴스화
-        hit_scores = {hit.meta.id: hit.meta.score for hit in response if hit.meta.id not in is_pending}
+        hit_scores = {hit.meta.id: hit.meta.score for hit in response if int(hit.meta.id) not in is_pending}
         goals = sorted(Goal.objects.filter(pk__in=hit_scores.keys()), key=lambda goal: hit_scores[str(goal.pk)], reverse=True)
         
         # 직렬화
-        serializer = GoalDefaultSerializer(goals, many=True)
+        serializer = GoalListSerializer(goals, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 # 방 활성화
@@ -201,11 +210,14 @@ def distribute_reward(room: Room):
         user.coin += activity_info.deposit_left
         user.save()
 
-# 그룹 리스트
-class RoomListAPI(APIView):
-    permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        rooms = Room.objects.filter(members=request.user)
-        serializer = RoomListSerializer(rooms, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class RoomGetAPI(APIView):
+    permission_classes = [IsAuthenticated, RoomAdminPermission]
+
+    def get(self, request, room_id):
+        try:
+            room = Room.objects.get(id=room_id)
+            serializer = RoomListSerializer(room)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            return Response(status=400)

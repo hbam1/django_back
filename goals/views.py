@@ -1,7 +1,7 @@
 from django.http import Http404
 from rest_framework import viewsets, status
 from .serializers import *
-from rooms.serializers import RoomDefaultSerializer
+from rooms.serializers import RoomListSerializer
 from .models import *
 from alarms.models import Alarm
 from rooms.models import Room
@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from .permissions import GoalOwnershipPermission
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 
@@ -27,6 +28,22 @@ class GoalViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'title': openapi.Schema(type=openapi.TYPE_STRING),
+                'content': openapi.Schema(type=openapi.TYPE_STRING),
+                'tags': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING)),
+                'activity_tags': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING))
+            }
+        ),
+        responses={
+            201: 'Created',
+            400: 'Bad Request'
+        },
+        tags=['목표 생성']
+    )
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -34,15 +51,32 @@ class GoalViewSet(viewsets.ModelViewSet):
 
         # 태그 입력
         tag_names = request.data.get("tags")  # str을 가진 list 반환
-        for tag_name in tag_names:
-            tag = Tag.objects.get(tag_name=tag_name)
-            serializer.instance.tags.add(tag)
+        if tag_names is not None:
+            for tag_name in tag_names:
+                try:
+                    tag = Tag.objects.get(tag_name=tag_name)
+                    serializer.instance.tags.add(tag)
+                except Tag.DoesNotExist:
+                    # 태그를 찾지 못할 때 에러 처리
+                    return Response({"error": f"Tag '{tag_name}' does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # tag_names가 None일 때 처리
+            return Response({"error": "Tag names are missing"}, status=status.HTTP_400_BAD_REQUEST)
 
         # 활동 태그 입력
         activity_tag_names = request.data.get("activity_tags")  # str을 가진 list 반환
-        for activity_tag_name in activity_tag_names:
-            activity_tag = ActivityTag.objects.get(tag_name=activity_tag_name)
-            serializer.instance.activity_tags.add(activity_tag)
+        if activity_tag_names is not None:
+            for activity_tag_name in activity_tag_names:
+                try:
+                    activity_tag = ActivityTag.objects.get(tag_name=activity_tag_name)
+                    serializer.instance.activity_tags.add(activity_tag)
+                except ActivityTag.DoesNotExist:
+                    # 활동 태그를 찾지 못할 때 에러 처리
+                    return Response({"error": f"Activity tag '{activity_tag_name}' does not exist"},
+                                    status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # activity_tag_names가 None일 때 처리
+            return Response({"error": "Activity tag names are missing"}, status=status.HTTP_400_BAD_REQUEST)
 
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
@@ -67,9 +101,9 @@ class GoalViewSet(viewsets.ModelViewSet):
     def delete(self, request, goal_id):
         goal = Goal.objects.get(pk=goal_id)
         goal.delete()
-        return Response(status=204)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-# 태그 조회
+# 부모 tag 조회
 class ParentTagListAPI(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -83,6 +117,7 @@ class ParentTagListAPI(APIView):
         serializer = TagSerializer(tags, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+# 자식 tag 조회
 class SubTagListAPI(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -137,7 +172,7 @@ class GroupRecommendationAPI(APIView):
             should_queries.append(tag_query)
 
         for activity_tag_id in activity_tag_ids:
-            activity_tag_query = Q('nested', path='activityTags', query=Q('terms', **{'activityTags.tag_id': [activity_tag_id]}), boost=3)
+            activity_tag_query = Q('nested', path='activity_tags', query=Q('terms', **{'activity_tags.tag_id': [activity_tag_id]}), boost=3)
             should_queries.append(activity_tag_query)
 
         # favor_offline이 같을 경우 높은 점수
@@ -173,22 +208,42 @@ class GroupRecommendationAPI(APIView):
         response = s.execute()
 
         # Score 내림차순 정렬 상태를 유지하며 인스턴스화
-        hit_scores = {hit.meta.id : hit.meta.score for hit in response if hit.meta.id not in is_pending}
+        hit_scores = {hit.meta.id : hit.meta.score for hit in response if int(hit.meta.id) not in is_pending}
         rooms = sorted(Room.objects.filter(pk__in=hit_scores.keys()), key=lambda room: hit_scores[str(room.pk)], reverse=True)
         
         # 직렬화
-        serializer = RoomDefaultSerializer(rooms, many=True)
+        serializer = RoomListSerializer(rooms, many=True)
         return Response(serializer.data, status=200)
 
 
 # 달성 보고 리스트
-class AchievementReportListAPI(APIView):
-    permission_classes = [IsAuthenticated]
+class AchievementReportAPI(APIView):
+    # 인증 필수
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated(), GoalOwnershipPermission()]
+        return [IsAuthenticated()]
+
+    # 달성보고 리스트 조회
     def get(self, request):
         achievement_reports = AchievementReport.objects.all().order_by('-pk')
         serializer = AchievementReportSerializer(achievement_reports, many = True)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # 달성보고 생성
+    def post(self, request, goal_id):
+        goal = Goal.objects.get(pk=goal_id)
+        if goal.is_completed:
+            return Response({'error': '이미 보고가 작성된 목표입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = AchievementReportSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(goal=goal)
+            goal.is_completed = True
+            goal.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 달성 보고 디테일
 class AchievementReportDetailAPI(APIView):
@@ -200,25 +255,7 @@ class AchievementReportDetailAPI(APIView):
         except AchievementReport.DoesNotExist:
             raise Http404
 
-    def get(self, request, pk, format=None):
+    def get(self, request, pk):
         achievement_report = self.get_object(pk)
         serializer = AchievementReportSerializer(achievement_report)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
-# 달성보고 생성
-class AchievementReportCreateAPI(APIView):
-    permission_classes = [IsAuthenticated, GoalOwnershipPermission]
-
-    def post(self, request, goal_id):
-        goal = Goal.objects.get(pk=goal_id)
-        if goal.is_completed:
-            return Response({'error': '이미 보고가 작성된 목표입니다.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        serializer = AchievementReportSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(goal=goal)
-            goal.is_completed = True
-            goal.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-

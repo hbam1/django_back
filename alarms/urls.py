@@ -3,9 +3,8 @@ from . import views
 
 
 urlpatterns = [
-    path("create/", views.AlarmCreateAPI.as_view()),
-    path("list/", views.AlarmListAPI.as_view()),
-    path("retrieve/<int:alarm_id>/", views.AlarmRetrieveAPI.as_view()),
-    path("accept/<int:pk>/", views.AlarmAcceptAPI.as_view()),
-    path("reject/<int:pk>/", views.AlarmRejectAPI.as_view())
+    path("", views.AlarmAPI.as_view()),
+    path("<int:alarm_id>/", views.AlarmRetrieveAPI.as_view()),
+    path("<int:alarm_id>/accept/", views.AlarmAcceptAPI.as_view()),
+    path("<int:alarm_id>/reject/", views.AlarmRejectAPI.as_view())
 ]

@@ -20,6 +20,9 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 # swagger setting
 schema_view = get_schema_view(
    openapi.Info(
@@ -38,11 +41,14 @@ urlpatterns = [
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-
-    path("admin/", admin.site.urls),
-    path("api/users/", include("users.urls")),
-    path("api/goals/", include("goals.urls")),
+    # apps
+    path("admin/", admin.site.urls), # 관리 페이지
+    path("api/users/", include("users.urls")), # user
+    path("api/goals/", include("goals.urls")), # goals
     path("api/rooms/", include("rooms.urls")),
-    path("api/alarms/", include("alarms.urls")),
+    path("api/users/alarms/", include("alarms.urls")),
     path("api/rooms/<int:room_id>/activities/", include("activities.urls")),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

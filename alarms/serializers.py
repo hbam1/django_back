@@ -5,15 +5,6 @@ from goals.serializers import TagSerializer, ActivityTagSerializer
 from rooms.models import Room
 from users.serializers import UserInfAlarmSerializer 
 
-
-# 알람 생성
-class AlarmSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Alarm
-        exclude = ('alarm_from',)
-
-
 # 알람 목표
 class AlarmGoalSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
@@ -40,21 +31,15 @@ class AlarmListSerializer(serializers.ModelSerializer):
     goal = AlarmGoalSerializer(read_only=True)
     room = AlarmRoomSerializer(read_only=True)
     alarm_from = UserInfAlarmSerializer(read_only=True)
-    current_user_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Alarm
-        fields = (
-            "id",
-            "goal",
-            "room",
-            "alarm_from",
-            "alarm_to",
-            "current_user_id",
-        )
+        fields = "__all__"
 
-    def get_current_user_id(self, obj):
-        request = self.context.get('request')
-        if request and hasattr(request, 'user'):
-            return request.user.id
-        return None
+
+# 알람 생성
+class AlarmSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Alarm
+        exclude = ('alarm_from',)
