@@ -5,7 +5,7 @@ from goals.models import Goal
 from activities.models import UserActivityInfo
 from .serializers import RoomCreateSerializer, GoalListSerializer, RoomListSerializer
 from rest_framework.permissions import IsAuthenticated
-from .permissions import RoomAdminPermission
+from .permissions import RoomAdminPermission, RoomAttendancePermission
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
@@ -55,7 +55,7 @@ class RoomAPI(APIView):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
             # 방장의 보증금 확인
-            if request.user.coin < request.data.get("deposit"):
+            if request.user.coin < int(request.data.get("deposit")):
                 return Response(status=status.HTTP_403_FORBIDDEN)
 
             # goal로부터 태그들 갖고 옴
@@ -212,7 +212,7 @@ def distribute_reward(room: Room):
 
 
 class RoomGetAPI(APIView):
-    permission_classes = [IsAuthenticated, RoomAdminPermission]
+    permission_classes = [IsAuthenticated, RoomAttendancePermission]
 
     def get(self, request, room_id):
         try:

@@ -14,7 +14,7 @@ from .tasks import create_periodic_task
 from django.db.models import Case, When, Value, IntegerField
 
 class MemberListAPI(APIView):
-    permission_classes = [IsAuthenticated, RoomAdminPermission]
+    permission_classes = [IsAuthenticated, RoomAttendancePermission]
     
     def get(self, request, room_id):
         room = Room.objects.get(id=room_id)
@@ -61,7 +61,7 @@ class AuthenticationViewSet(viewsets.ModelViewSet):
 
 #인증 제출 및 인증 리스트
 class MemberAuthAPI(APIView):
-    permission_classes = [IsAuthenticated, RoomAdminPermission]
+    permission_classes = [IsAuthenticated, RoomAttendancePermission]
 
     def get(self, request, room_id):
         auths = Authentication.objects.filter(room__id=room_id)
@@ -100,9 +100,9 @@ class MemberAuthRejectAPI(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
- #인증 리스트
+#인증 리스트
 class AuthListAPI(APIView):
-    permission_classes = [IsAuthenticated, RoomAdminPermission]
+    permission_classes = [IsAuthenticated,RoomAttendancePermission]
 
     def get(self, request, room_id):
         auths = Authentication.objects.filter(room__id=room_id)
@@ -111,7 +111,7 @@ class AuthListAPI(APIView):
 
 #로그 list
 class LogListAPI(APIView):
-    permission_classes = [IsAuthenticated, RoomAdminPermission]
+    permission_classes = [IsAuthenticated, RoomAttendancePermission]
 
     def get(self, request, room_id):
         room = Room.objects.get(id=room_id)
