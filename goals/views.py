@@ -1,7 +1,8 @@
 from django.http import Http404, JsonResponse
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from .serializers import *
-from rooms.serializers import RoomDefaultSerializer
+from rooms.serializers import RoomListSerializer
 from .models import *
 from alarms.models import Alarm
 from rooms.models import Room
@@ -11,7 +12,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.decorators import action
+
 
 # Method import
 from elasticsearch_dsl import Search, Q
@@ -101,9 +102,9 @@ class GoalViewSet(viewsets.ModelViewSet):
     def delete(self, request, goal_id):
         goal = Goal.objects.get(pk=goal_id)
         goal.delete()
-        return Response(status=204)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-# 태그 조회
+# 부모 tag 조회
 class ParentTagListAPI(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -117,7 +118,7 @@ class ParentTagListAPI(APIView):
         serializer = TagSerializer(tags, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+# 자식 tag 조회
 class SubTagListAPI(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -211,22 +212,42 @@ class GroupRecommendationAPI(APIView):
         response = s.execute()
 
         # Score 내림차순 정렬 상태를 유지하며 인스턴스화
-        hit_scores = {hit.meta.id : hit.meta.score for hit in response if hit.meta.id not in is_pending}
+        hit_scores = {hit.meta.id : hit.meta.score for hit in response if int(hit.meta.id) not in is_pending}
         rooms = sorted(Room.objects.filter(pk__in=hit_scores.keys()), key=lambda room: hit_scores[str(room.pk)], reverse=True)
         
         # 직렬화
-        serializer = RoomDefaultSerializer(rooms, many=True)
+        serializer = RoomListSerializer(rooms, many=True)
         return Response(serializer.data, status=200)
 
 
 # 달성 보고 리스트
-class AchievementReportListAPI(APIView):
-    permission_classes = [IsAuthenticated]
+class AchievementReportAPI(APIView):
+    # 인증 필수
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated(), GoalOwnershipPermission()]
+        return [IsAuthenticated()]
+
+    # 달성보고 리스트 조회
     def get(self, request):
         achievement_reports = AchievementReport.objects.all().order_by('-pk')
         serializer = AchievementReportSerializer(achievement_reports, many = True)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # 달성보고 생성
+    def post(self, request, goal_id):
+        goal = Goal.objects.get(pk=goal_id)
+        if goal.is_completed:
+            return Response({'error': '이미 보고가 작성된 목표입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = AchievementReportSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(goal=goal)
+            goal.is_completed = True
+            goal.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 달성 보고 디테일
 class AchievementReportDetailAPI(APIView):
@@ -238,31 +259,7 @@ class AchievementReportDetailAPI(APIView):
         except AchievementReport.DoesNotExist:
             raise Http404
 
-    def get(self, request, pk, format=None):
+    def get(self, request, pk):
         achievement_report = self.get_object(pk)
         serializer = AchievementReportSerializer(achievement_report)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
-# 달성보고 생성
-class AchievementReportCreateAPI(APIView):
-    permission_classes = [IsAuthenticated, GoalOwnershipPermission]
-
-    def get(self, request, pk):
-        goal = Goal.objects.get(pk=pk)
-        goal_title = goal.title
-        data = {'goal_title': goal_title}
-        return JsonResponse(data, status=200)
-        
-    def post(self, request, goal_id):
-        goal = Goal.objects.get(pk=goal_id)
-        if goal.is_completed:
-            return Response({'error': '이미 보고가 작성된 목표입니다.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        serializer = AchievementReportSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(goal=goal)
-            goal.is_completed = True
-            goal.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-

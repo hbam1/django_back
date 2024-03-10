@@ -4,9 +4,8 @@ from alarms.models import Alarm
 from goals.models import Goal
 from activities.models import UserActivityInfo
 from .serializers import RoomCreateSerializer, GoalListSerializer, RoomListSerializer
-from goals.serializers import GoalDefaultSerializer
 from rest_framework.permissions import IsAuthenticated
-from .permissions import RoomAdminPermission
+from .permissions import RoomAdminPermission, RoomAttendancePermission
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
@@ -31,7 +30,7 @@ class GoalListAPI(APIView):
 
 
 # 방 생성
-class RoomCreateAPI(APIView):
+class RoomAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
@@ -56,7 +55,7 @@ class RoomCreateAPI(APIView):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
             # 방장의 보증금 확인
-            if request.user.coin < request.data.get("deposit"):
+            if request.user.coin < int(request.data.get("deposit")):
                 return Response(status=status.HTTP_403_FORBIDDEN)
 
             # goal로부터 태그들 갖고 옴
@@ -78,6 +77,16 @@ class RoomCreateAPI(APIView):
                 deposit_left=room.deposit
             )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @swagger_auto_schema(
+        tags=['그룹 리스트 조회'],
+        operation_summary='그룹 리스트 조회',
+        responses={status.HTTP_200_OK: RoomListSerializer(many=True)}
+    )
+    def get(self, request):
+        rooms = Room.objects.filter(members=request.user)
+        serializer = RoomListSerializer(rooms, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 # 유저 추천
 class MemberRecommendationAPI(APIView):
@@ -144,11 +153,11 @@ class MemberRecommendationAPI(APIView):
         response = s.execute()
 
         # Score 내림차순 정렬 상태를 유지하며 인스턴스화
-        hit_scores = {hit.meta.id: hit.meta.score for hit in response if hit.meta.id not in is_pending}
+        hit_scores = {hit.meta.id: hit.meta.score for hit in response if int(hit.meta.id) not in is_pending}
         goals = sorted(Goal.objects.filter(pk__in=hit_scores.keys()), key=lambda goal: hit_scores[str(goal.pk)], reverse=True)
         
         # 직렬화
-        serializer = GoalDefaultSerializer(goals, many=True)
+        serializer = GoalListSerializer(goals, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 # 방 활성화
@@ -201,16 +210,14 @@ def distribute_reward(room: Room):
         user.coin += activity_info.deposit_left
         user.save()
 
-# 그룹 리스트
-class RoomListAPI(APIView):
-    permission_classes = [IsAuthenticated]
 
-    @swagger_auto_schema(
-        tags=['그룹 리스트 조회'],
-        operation_summary='그룹 리스트 조회',
-        responses={status.HTTP_200_OK: RoomListSerializer(many=True)}
-    )
-    def get(self, request):
-        rooms = Room.objects.filter(members=request.user)
-        serializer = RoomListSerializer(rooms, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class RoomGetAPI(APIView):
+    permission_classes = [IsAuthenticated, RoomAttendancePermission]
+
+    def get(self, request, room_id):
+        try:
+            room = Room.objects.get(id=room_id)
+            serializer = RoomListSerializer(room)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            return Response(status=400)

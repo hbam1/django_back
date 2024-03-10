@@ -33,7 +33,7 @@ class GoalDocument(Document):
         ]
 
     def prepare_tags(self, instance):
-        return [{'tag_id': tag.pk} for tag in instance.tags.all()]
+        return [{'tag_id': tag.id} for tag in instance.tags.all()]
 
     def prepare_activity_tags(self, instance):
-        return [{'tag_id': tag.pk} for tag in instance.activity_tags.all()]
+        return [{'tag_id': tag.id} for tag in instance.activity_tags.all()]

@@ -8,23 +8,18 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 
-# 알람 생성
-class AlarmCreateAPI(APIView):
+# 알람 리스트 조회 및 생성
+class AlarmAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = AlarmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)  # 예외가 발생했을 때 에러를 발생시켜라
-        alarm = serializer.save(from_to=request.user)
-        return Response(AlarmSerializer(alarm), status=status.HTTP_201_CREATED)
-
-
-# 알람 list
-class AlarmListAPI(APIView):
-    permission_classes = [IsAuthenticated]
+        alarm = serializer.save(alarm_from=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get(self, request):
-        alarms = Alarm.objects.get(alarm_to=request.user).order_by('-id')
+        alarms = Alarm.objects.filter(alarm_to=request.user).order_by('-id')
         serializer = AlarmListSerializer(alarms, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -33,9 +28,9 @@ class AlarmListAPI(APIView):
 class AlarmRetrieveAPI(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, pk):
+    def get(self, request, alarm_id):
         try:
-            alarm = Alarm.objects.get(id=pk)
+            alarm = Alarm.objects.get(id=alarm_id)
             # 보안. 알람의 수신자가 아니면 접근할 수 없음
             if alarm.alarm_to != request.user:
                 return Response(status=status.HTTP_403_FORBIDDEN)
@@ -50,9 +45,9 @@ class AlarmRetrieveAPI(APIView):
 class AlarmAcceptAPI(APIView):
     permission_classes = [IsAuthenticated]
 
-    def delete(self, request, pk):
+    def delete(self, request, alarm_id):
         try:
-            alarm = Alarm.objects.get(id=pk)
+            alarm = Alarm.objects.get(id=alarm_id)
             # 알람 수신자 확인
             if alarm.alarm_to != request.user:
                 return Response(status=status.HTTP_404_NOT_FOUND)
@@ -105,9 +100,9 @@ class AlarmAcceptAPI(APIView):
 class AlarmRejectAPI(APIView):
     permission_classes = [IsAuthenticated]
 
-    def delete(self, request, pk):
+    def delete(self, request, alarm_id):
         try:
-            alarm = Alarm.objects.get(id=pk)
+            alarm = Alarm.objects.get(id=alarm_id)
             if alarm.alarm_to != request.user:
                 return Response(status=status.HTTP_403_FORBIDDEN)
         except Alarm.DoesNotExist:

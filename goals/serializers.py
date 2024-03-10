@@ -27,6 +27,7 @@ class GoalDefaultSerializer(serializers.ModelSerializer):
     class Meta:
         model = Goal
         fields = '__all__'
+        depth = 1
 
 # 목표 생성, 조회 serializer
 class GoalSerializer(serializers.ModelSerializer):

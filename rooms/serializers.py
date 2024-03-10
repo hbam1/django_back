@@ -58,9 +58,13 @@ class RoomListSerializer(serializers.ModelSerializer):
             fields = (
                 "id",
                 "title",
+                "detail",
                 "members",
                 "master",
                 "tags",
+                "cert_required",
+                "penalty_value",
+                "deposit",
                 "activity_tags",
                 "is_active",
                 "closing_date",

@@ -82,7 +82,17 @@ CORS_ALLOW_CREDENTIALS = True # 쿠키를 요청에 추가할 수 있게 됨.
 # 접근 가능한 url 을 따로 관리
 CORS_ORIGIN_WHITELIST = (
     "http://localhost:5173",
+    "http://localhost:9200",
 )
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 
 ROOT_URLCONF = "config.urls"
 
@@ -213,5 +223,7 @@ ELASTICSEARCH_DSL = {
 
 CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
 CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379'
-
 CELERY_TIMEZONE = 'Asia/Seoul'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
