@@ -3,6 +3,7 @@ from .models import Alarm
 from goals.models import Goal
 from goals.serializers import TagSerializer, ActivityTagSerializer
 from rooms.models import Room
+from users.serializers import UserInfAlarmSerializer 
 
 # 알람 목표
 class AlarmGoalSerializer(serializers.ModelSerializer):
@@ -18,6 +19,7 @@ class AlarmGoalSerializer(serializers.ModelSerializer):
 class AlarmRoomSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     activity_tags = ActivityTagSerializer(many=True, read_only=True)
+    master = UserInfAlarmSerializer(read_only=True)
 
     class Meta:
         model = Room
@@ -26,8 +28,9 @@ class AlarmRoomSerializer(serializers.ModelSerializer):
 
 # 알람 조회
 class AlarmListSerializer(serializers.ModelSerializer):
-    goals = AlarmGoalSerializer(read_only=True)
-    rooms = AlarmRoomSerializer(read_only=True)
+    goal = AlarmGoalSerializer(read_only=True)
+    room = AlarmRoomSerializer(read_only=True)
+    alarm_from = UserInfAlarmSerializer(read_only=True)
 
     class Meta:
         model = Alarm
