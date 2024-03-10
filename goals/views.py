@@ -1,4 +1,4 @@
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from rest_framework import viewsets, status
 from .serializers import *
 from rooms.serializers import RoomDefaultSerializer
@@ -247,6 +247,12 @@ class AchievementReportDetailAPI(APIView):
 class AchievementReportCreateAPI(APIView):
     permission_classes = [IsAuthenticated, GoalOwnershipPermission]
 
+    def get(self, request, pk):
+        goal = Goal.objects.get(pk=pk)
+        goal_title = goal.title
+        data = {'goal_title': goal_title}
+        return JsonResponse(data, status=200)
+        
     def post(self, request, goal_id):
         goal = Goal.objects.get(pk=goal_id)
         if goal.is_completed:
