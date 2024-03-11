@@ -19,7 +19,7 @@ class AlarmAPI(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get(self, request):
-        alarms = Alarm.objects.get(alarm_to=request.user).order_by('-id')
+        alarms = Alarm.objects.filter(alarm_to=request.user).order_by('-id')
         serializer = AlarmListSerializer(alarms, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

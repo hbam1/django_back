@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Alarm
 from goals.models import Goal
 from goals.serializers import TagSerializer, ActivityTagSerializer
+from users.serializers import UserSearchResultSerializer
 from rooms.models import Room
 
 # 알람 목표
@@ -26,8 +27,9 @@ class AlarmRoomSerializer(serializers.ModelSerializer):
 
 # 알람 조회
 class AlarmListSerializer(serializers.ModelSerializer):
-    goals = AlarmGoalSerializer(read_only=True)
-    rooms = AlarmRoomSerializer(read_only=True)
+    goal = AlarmGoalSerializer(read_only=True)
+    room = AlarmRoomSerializer(read_only=True)
+    alarm_from = UserSearchResultSerializer()
 
     class Meta:
         model = Alarm

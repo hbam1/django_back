@@ -34,7 +34,7 @@ class UserMainInfoSerializer(serializers.Serializer):
 class UserSearchResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "nickname")
+        fields = ("id", "nickname", "fuel")
 
 #마이페이지용 회원정보조회
 class UserDetailInfoSerializer(serializers.ModelSerializer):

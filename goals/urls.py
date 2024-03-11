@@ -14,7 +14,8 @@ urlpatterns = [
     path('<int:goal_id>/recommend_group/', views.GroupRecommendationAPI.as_view()),
     # 달성 보고
     path("achievement_reports/", views.AchievementReportAPI.as_view()),
-    path("achievement_reports/<int:pk>/", views.AchievementReportDetailAPI.as_view()),
+    path("achievement_reports/create/<int:goal_id>/", views.AchievementReportCreateAPI.as_view()),
+    path("achievement_reports/detail/<int:pk>/", views.AchievementReportDetailAPI.as_view()),
     # router 아래에 url을 작성하면 경로를 못찾음
     # goal 생성, 리스트 조회, 삭제
     path("", include(router.urls)),

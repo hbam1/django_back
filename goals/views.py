@@ -218,32 +218,37 @@ class GroupRecommendationAPI(APIView):
 
 # 달성 보고 리스트
 class AchievementReportAPI(APIView):
-    # 인증 필수
-    def get_permissions(self):
-        if self.request.method == 'POST':
-            return [IsAuthenticated(), GoalOwnershipPermission()]
-        return [IsAuthenticated()]
+    permission_classes = [IsAuthenticated]
 
-    # 달성보고 리스트 조회
     def get(self, request):
         achievement_reports = AchievementReport.objects.all().order_by('-pk')
-        serializer = AchievementReportSerializer(achievement_reports, many = True)
-        
+        serializer = AchievementReportSerializer(achievement_reports, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # 달성보고 생성
-    def post(self, request, goal_id):
-        goal = Goal.objects.get(pk=goal_id)
-        if goal.is_completed:
-            return Response({'error': '이미 보고가 작성된 목표입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+class AchievementReportCreateAPI(APIView):
+    permission_classes = [IsAuthenticated, GoalOwnershipPermission]
 
-        serializer = AchievementReportSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(goal=goal)
-            goal.is_completed = True
-            goal.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, goal_id):
+        try:
+            print(request.body)
+            goal = Goal.objects.get(pk=goal_id)
+            if goal.is_completed:
+                return Response({'error': '이미 보고가 작성된 목표입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer = AchievementReportSerializer(data=request.data)
+
+            if serializer.is_valid():
+                serializer.save(goal=goal)
+                goal.is_completed = True
+                goal.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        except Goal.DoesNotExist:
+            return Response({'error': '해당 goal_id에 해당하는 목표가 존재하지 않습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
 
 # 달성 보고 디테일
 class AchievementReportDetailAPI(APIView):
