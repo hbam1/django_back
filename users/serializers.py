@@ -60,6 +60,16 @@ class MemberListSerializer(serializers.ModelSerializer):
         fields = "__all__"
         depth = 1
 
+# 알람에 필요한 회원정보
+class UserInfAlarmSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "nickname",
+            "fuel",
+        )
+
 # 회원가입 후 유저세부정보 입력
 class UserSignupDetailSerializer(serializers.ModelSerializer):
     class Meta:
