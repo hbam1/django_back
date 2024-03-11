@@ -13,7 +13,6 @@ from rest_framework.response import Response
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
-
 # Method import
 from elasticsearch_dsl import Search, Q
 
@@ -182,20 +181,17 @@ class GroupRecommendationAPI(APIView):
         
         # region, region_detail에서 겹치는 단어가 많으면 높은 점수
         if goal.favor_offline:
-            print("goal.user.region: ", goal.user.region)  # <--- Check here
-            print("goal.user.region_detail: ", goal.user.region_detail)  # <--- Check here
             region_boost_query = Q('match', master__region={'query': goal.user.region, 'boost': 2})
             detail_boost_query = Q('match', master__region_detail={'query': goal.user.region_detail, 'boost': 2})
             should_queries.append(region_boost_query)
             should_queries.append(detail_boost_query)
 
         # title, detail-content에서 겹치는 단어가 많으면 높은 점수
-        print("goal.title: ", goal.title)  # <--- Check here
-        print("goal.content: ", goal.content)  # <--- Check here
         title_boost_query = Q('match', title={'query': goal.title, 'boost': 2})
         content_boost_query = Q('match', detail={'query': goal.content, 'boost': 2})
         should_queries.append(title_boost_query)
         should_queries.append(content_boost_query)
+
         # is_active가 False일때만 추천 목록에 반영 
         is_active_query = Q('term', is_active=False)
         must_queries.append(is_active_query)
@@ -253,7 +249,6 @@ class AchievementReportCreateAPI(APIView):
             return Response({'error': '해당 goal_id에 해당하는 목표가 존재하지 않습니다.'}, status=status.HTTP_400_BAD_REQUEST)
         
         
-
 # 달성 보고 디테일
 class AchievementReportDetailAPI(APIView):
     permission_classes = [IsAuthenticated]
